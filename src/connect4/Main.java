@@ -4,6 +4,7 @@ public final class Main
 {
 	public static void main(String[] args) 
 	{
+		
 		int totalColumns = 7;
 		int totalRows = 6;
 		int winningAlignTokenNumber = 4;
