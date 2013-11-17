@@ -14,7 +14,6 @@ public class Model
 	private Map<Players, TokenType> playersAndTokens;
 	// 0 = empty, 1 = player 1, 2 = player 2
 	private int[][] board;
-	//private Map<Integer, Players[]> availablePositions;
 	
 	private BufferedImage redTokenImage;
 	private BufferedImage blackTokenImage;
@@ -157,7 +156,7 @@ public class Model
 	{
 		try
 		{
-			return Players.values()[board[columns][rows]];
+			return Players.values()[board[column][row]];
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
