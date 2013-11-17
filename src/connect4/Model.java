@@ -12,38 +12,40 @@ import javax.imageio.ImageIO;
 public class Model
 {
 	private Map<Players, TokenType> playersAndTokens;
-	private Map<Integer, Players[]> availablePositions;
+	// 0 = empty, 1 = player 1, 2 = player 2
+	private int[][] board;
+	//private Map<Integer, Players[]> availablePositions;
 	
 	private BufferedImage redTokenImage;
 	private BufferedImage blackTokenImage;
 	private BufferedImage emptyTokenImage;
 	
-	private LinkedList<ModelUpdateListenerI> viewsListeners;
+	private LinkedList<ModelUpdateListenerI> viewsListeners = new LinkedList<ModelUpdateListenerI>();
 	
-	private final int floorColumns;
-	private final int floorRows;
-	private final int winningAlignTokenNumber;
+	private final int columns;
+	private final int rows;
+	private final int connectToWin;
 	
 	private Players currentPlayer;
 	
 	public Model()
 	{
-		floorColumns = 7;
-		floorRows = 6;
-		winningAlignTokenNumber = 4;
+		this.columns = 7;
+		this.rows = 6;
+		this.connectToWin = 4;
 		viewsListeners = new LinkedList<ModelUpdateListenerI>();
 		
-		initializeAvailablePositions();
+		makeNewBoard();
 		loadTokenImages();	
 	}
-	public Model(final int columns, final int rows, final int _winningAlignTokenNumber)
+	public Model(final int columns, final int rows, final int connectToWin)
 	{
-		floorColumns = columns;
-		floorRows = rows;
-		winningAlignTokenNumber = _winningAlignTokenNumber;
-		viewsListeners = new LinkedList<ModelUpdateListenerI>();
+		this.columns = columns;
+		this.rows = rows;
+		this.connectToWin = connectToWin;
+		board = new int[this.columns][this.rows];
 		
-		initializeAvailablePositions();
+		makeNewBoard();
 		loadTokenImages();
 	}
 	
@@ -56,7 +58,7 @@ public class Model
 	{
 		for(ModelUpdateListenerI listener: viewsListeners)
 		{
-			listener.initializeViews(floorColumns, floorRows,
+			listener.initializeViews(columns, rows,
 					emptyTokenImage, Players.NONE);
 		}
 	}
@@ -74,11 +76,6 @@ public class Model
 		playersAndTokens = new HashMap<Players, TokenType>();
 		playersAndTokens.put(_player1, TokenType.BLACK);
 		playersAndTokens.put(_player2, TokenType.RED);
-	}
-	
-	public final int getWinningAlignTokenNumber()
-	{
-		return winningAlignTokenNumber;
 	}
 	
 	public final TokenType getPlayerToken(final Players player)
@@ -111,12 +108,12 @@ public class Model
 	
 	public final int getFloorColumns()
 	{
-		return floorColumns;
+		return columns;
 	}
 	
 	public final int getFloorRows()
 	{
-		return floorRows;
+		return rows;
 	}
 	
 	public final BufferedImage getTokenImage(final TokenType token)
@@ -133,7 +130,7 @@ public class Model
 	
 	public final boolean isAvailable(final int column, final int row)
 	{
-		if(availablePositions.get(column)[row] == Players.NONE)
+		if(board[column][row] == 0)
 		{
 			return true;
 		}
@@ -142,27 +139,42 @@ public class Model
 	
 	public final void setCurrentPlayerAtPosition(final int column, final int row)
 	{
-		availablePositions.get(column)[row] = getCurrentPlayer();
+		switch (getCurrentPlayer())
+		{
+			case NONE:
+				board[column][row] = 0;
+				break;
+			case PLAYER1:
+				board[column][row] = 1;
+				break;
+			case PLAYER2:
+				board[column][row] = 2;
+				break;
+		}
 	}
 	
 	public final Players getPositionPlayer(final int column, final int row)
 	{
-		if((column < 0) || (column >= floorColumns) || (row < 0) || (row >= floorRows)) 
+		try
 		{
+			return Players.values()[board[columns][rows]];
+		}
+		catch(ArrayIndexOutOfBoundsException e)
+		{
+			// TODO make throws
 			return Players.NONE;
 		}
-		return availablePositions.get(column)[row];
 	}
 	
-	public final void resetAvailablePostions()
+	public final void makeNewBoard()
 	{
-		initializeAvailablePositions();
+		board = new int[columns][rows];
 	}
 	
-	public final boolean checkPositionMakeWinning(final int column, final int row)
+	public final boolean isPositionMakeWinning(final int column, final int row)
 	{
 		// WinningAlignTokenNumber from current position to both ways & current position
-		int caseSize = getWinningAlignTokenNumber() * 2 + 1;
+		int caseSize = connectToWin * 2 + 1;
 		
 		// Horizontal
 		Players[] case1 = new Players[caseSize];
@@ -174,25 +186,25 @@ public class Model
 		Players[] case4 = new Players[caseSize];
 
 		// The middle index is the actual player, were he just played
-		case1[getWinningAlignTokenNumber()] = getCurrentPlayer();
-		case2[getWinningAlignTokenNumber()] = getCurrentPlayer();
-		case3[getWinningAlignTokenNumber()] = getCurrentPlayer();
-		case4[getWinningAlignTokenNumber()] = getCurrentPlayer();
+		case1[connectToWin] = getCurrentPlayer();
+		case2[connectToWin] = getCurrentPlayer();
+		case3[connectToWin] = getCurrentPlayer();
+		case4[connectToWin] = getCurrentPlayer();
 		
 		// For all cases go both ways from the actual player index
-		for(int i = 1; i <= getWinningAlignTokenNumber(); i++)
+		for(int i = 1; i <= connectToWin; i++)
 		{
-			case1[i + getWinningAlignTokenNumber()] = getPositionPlayer(column + i, row);
-			case1[getWinningAlignTokenNumber() - i] = getPositionPlayer(column - i, row);	
+			case1[i + connectToWin] = getPositionPlayer(column + i, row);
+			case1[connectToWin - i] = getPositionPlayer(column - i, row);	
 
-			case2[i + getWinningAlignTokenNumber()] = getPositionPlayer(column, row + i);
-			case2[getWinningAlignTokenNumber() - i] = getPositionPlayer(column, row - i);
+			case2[i + connectToWin] = getPositionPlayer(column, row + i);
+			case2[connectToWin - i] = getPositionPlayer(column, row - i);
 
-			case3[i + getWinningAlignTokenNumber()] = getPositionPlayer(column + i, row + i);
-			case3[getWinningAlignTokenNumber() - i] = getPositionPlayer(column - i, row - i);
+			case3[i + connectToWin] = getPositionPlayer(column + i, row + i);
+			case3[connectToWin - i] = getPositionPlayer(column - i, row - i);
 
-			case4[i + getWinningAlignTokenNumber()] = getPositionPlayer(column - i, row + i);
-			case4[getWinningAlignTokenNumber() - i] = getPositionPlayer(column + i, row - i);
+			case4[i + connectToWin] = getPositionPlayer(column - i, row + i);
+			case4[connectToWin - i] = getPositionPlayer(column + i, row - i);
 		}
 		Map<Integer, Players[]> winningCases = new HashMap<Integer, Players[]>();
 		
@@ -202,33 +214,6 @@ public class Model
 		winningCases.put(4, case4);
 		
 		return checkIfWinningCases(winningCases);
-	}
-	
-	private final void initializeAvailablePositions()
-	{
-		availablePositions = new HashMap<Integer, Players[]>();
-		for(int column = 0; column < floorColumns; column++)
-		{
-			availablePositions.put(column, new Players[floorRows]);
-			for(int row = 0; row < floorRows; row++)
-			{
-				availablePositions.get(column)[row] = Players.NONE;
-			}
-		}
-	}
-	
-	private final void loadTokenImages()
-	{
-		try
-		{
-			redTokenImage = ImageIO.read(new File("./src/img/Red50x50.png"));
-			blackTokenImage = ImageIO.read(new File("./src/img/Black50x50.png"));
-			emptyTokenImage = ImageIO.read(new File("./src/img/Empty50x50.png"));
-		}
-		catch (IOException e)
-		{
-			System.out.println("The token image can't be loaded:\n" + e.toString());
-		}
 	}
 	
 	private final boolean checkIfWinningCases(final Map<Integer, Players[]> winningCases)
@@ -247,12 +232,26 @@ public class Model
 				{
 					consecutivePlayerMatches = 0;
 				}
-				if(consecutivePlayerMatches >= getWinningAlignTokenNumber())
+				if(consecutivePlayerMatches >= connectToWin)
 				{
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+	
+	private final void loadTokenImages()
+	{
+		try
+		{
+			redTokenImage = ImageIO.read(new File("./src/img/Red50x50.png"));
+			blackTokenImage = ImageIO.read(new File("./src/img/Black50x50.png"));
+			emptyTokenImage = ImageIO.read(new File("./src/img/Empty50x50.png"));
+		}
+		catch (IOException e)
+		{
+			System.out.println("The token image can't be loaded:\n" + e.toString());
+		}
 	}
 }

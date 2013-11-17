@@ -10,17 +10,16 @@ public class Controller
 	public Controller()
 	{
 		model = new Model();
-		view = new View(this);
-		model.addListener(view);
-		model.initializeObserversViews();
-		// Default
-		model.setCurrentPlayer(Players.PLAYER1);
-		model.set2Players(Players.PLAYER1, Players.PLAYER2);
-		model.updateObserversViews();
+		initializeGame(model);
 	}
 	public Controller(final int columns, final int rows, final int winningAlignTokenNumber)
 	{
 		model = new Model(columns, rows, winningAlignTokenNumber);
+		initializeGame(model);
+	}
+	
+	private void initializeGame(Model model)
+	{
 		view = new View(this);
 		model.addListener(view);
 		model.initializeObserversViews();
@@ -29,6 +28,7 @@ public class Controller
 		model.set2Players(Players.PLAYER1, Players.PLAYER2);
 		model.updateObserversViews();
 	}
+	
 	public final void play(final int row, final int column)
 	{
 		int mostLowRow = getColumnMostLowFreeRow(column, row);
@@ -38,7 +38,7 @@ public class Controller
 			BufferedImage playerTokenImage = model.getTokenImage(model.getPlayerToken(model.getCurrentPlayer()));
 			view.updateToken(column, mostLowRow, playerTokenImage);
 			
-			if(model.checkPositionMakeWinning(column, mostLowRow))
+			if(model.isPositionMakeWinning(column, mostLowRow))
 			{
 				endOfTheGame(GameWinner.PLAYER);
 			}
@@ -88,7 +88,7 @@ public class Controller
 		{
 			quitTheGame();
 		}
-		model.resetAvailablePostions();
+		model.makeNewBoard();
 		view.makeNewPlayground(model.getTokenImage(TokenType.NONE));
 		
 	}
