@@ -9,7 +9,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,6 +24,10 @@ import javax.swing.JPanel;
 
 public class View implements ModelUpdateListenerI
 {
+	private BufferedImage redTokenImage;
+	private BufferedImage blackTokenImage;
+	private BufferedImage emptyTokenImage;
+	
 	private JFrame mainFrame;
 	private JPanel mainPanel;
 	private JLabel playerTurnLabel;
@@ -37,24 +44,10 @@ public class View implements ModelUpdateListenerI
 		mainFrame = new JFrame();
 		mainPanel = new JPanel(new GridLayout(2, 1));
 		mainPanel.setName("MainPanel");
+		loadTokenImages();
 	}
 	
-	private void makeMenuBar()
-	{
-	    JMenuBar menuBar = new JMenuBar();
-	    
-	    JMenu fileMenu = new JMenu("File");  
-	    fileMenu.setMnemonic(KeyEvent.VK_F);
-	    
-	    JMenuItem quitSubMenu = new JMenuItem("Exit", KeyEvent.VK_E);
-	    quitSubMenu.addActionListener(exitSubMenuListener);
-	    
-	    fileMenu.add(quitSubMenu);
-	    menuBar.add(fileMenu);
-	    mainPanel.add(menuBar);
-	}
-	
-	public void makeNewPlayground(BufferedImage defaultToken)
+	public void makeNewPlayground()
 	{
 		// INIT
 		if(playgroundPanel != null)
@@ -71,7 +64,7 @@ public class View implements ModelUpdateListenerI
 		int totalTokens = floorColumns * floorRows;
 		for(int i = 0; i < totalTokens; i++)
 		{
-			JLabel tokenImageLabel = new JLabel(new ImageIcon(defaultToken));
+			JLabel tokenImageLabel = new JLabel(new ImageIcon(emptyTokenImage));
 			tokenImageLabel.addMouseListener(tokenImageMouseListener);
 			playgroundPanel.add(tokenImageLabel);
 		}
@@ -80,13 +73,12 @@ public class View implements ModelUpdateListenerI
 		mainPanel.repaint();
 	}
 	
-	public final void updateToken(final int column, final int row, 
-			BufferedImage playerTokenImage)
+	public final void updateToken(final int column, final int row, TokenType playerToken)
 	{
 		int index = (row * floorColumns) + column;
 		playgroundPanel.remove(index);
 
-		JLabel tokenImageLabel = new JLabel(new ImageIcon(playerTokenImage));
+		JLabel tokenImageLabel = new JLabel(new ImageIcon(getTokenImage(playerToken)));
 		tokenImageLabel.addMouseListener(tokenImageMouseListener);
 		playgroundPanel.add(tokenImageLabel, index);
 
@@ -100,8 +92,7 @@ public class View implements ModelUpdateListenerI
 	}
 	
 	@Override
-	public final void initializeViews(final int floorColumns, final int floorRows,
-			final BufferedImage defaultImage, final Players defaultPlayer) 
+	public final void initializeViews(final int floorColumns, final int floorRows, final Players defaultPlayer) 
 	{
 		this.floorColumns = floorColumns;
 		this.floorRows = floorRows;
@@ -110,7 +101,7 @@ public class View implements ModelUpdateListenerI
 		makeMenuBar();
 		mainPanel.add(playerTurnLabel);
 		mainFrame.getContentPane().add(mainPanel);
-		makeNewPlayground(defaultImage);
+		makeNewPlayground();
 		
 	    mainFrame.pack();
 		mainFrame.setResizable(false);
@@ -127,6 +118,33 @@ public class View implements ModelUpdateListenerI
 		getMainPanel().add(playerTurnLabel);
 		mainFrame.pack();
 		mainFrame.repaint();
+	}
+	
+	private final BufferedImage getTokenImage(final TokenType token)
+	{
+		switch (token)
+		{
+			case RED:
+				return redTokenImage;
+			case BLACK:
+				return blackTokenImage;
+		}
+		return emptyTokenImage;
+	}
+	
+	private void makeMenuBar()
+	{
+	    JMenuBar menuBar = new JMenuBar();
+	    
+	    JMenu fileMenu = new JMenu("File");  
+	    fileMenu.setMnemonic(KeyEvent.VK_F);
+	    
+	    JMenuItem quitSubMenu = new JMenuItem("Exit", KeyEvent.VK_E);
+	    quitSubMenu.addActionListener(exitSubMenuListener);
+	    
+	    fileMenu.add(quitSubMenu);
+	    menuBar.add(fileMenu);
+	    mainPanel.add(menuBar);
 	}
 	
 	private final JPanel getMainPanel()
@@ -167,6 +185,20 @@ public class View implements ModelUpdateListenerI
 		}
 	};
 	
+	private final void loadTokenImages()
+	{
+		try
+		{
+			redTokenImage = ImageIO.read(new File("./src/img/Red50x50.png"));
+			blackTokenImage = ImageIO.read(new File("./src/img/Black50x50.png"));
+			emptyTokenImage = ImageIO.read(new File("./src/img/Empty50x50.png"));
+		}
+		catch (IOException e)
+		{
+			System.out.println("The token image can't be loaded:\n" + e.toString());
+		}
+	}
+	
 	private final MouseListener tokenImageMouseListener = new MouseListener()
 	{
 		@Override
@@ -199,6 +231,5 @@ public class View implements ModelUpdateListenerI
 		{
 			// TODO Auto-generated method stub
 		}
-		
 	};
 }

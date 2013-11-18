@@ -1,25 +1,20 @@
 package connect4;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
-
 public class Model
 {
-	private Map<Players, TokenType> playersAndTokens;
 	// 0 = empty, 1 = player 1, 2 = player 2
 	private int[][] board;
 	
-	private BufferedImage redTokenImage;
-	private BufferedImage blackTokenImage;
-	private BufferedImage emptyTokenImage;
+	//private BufferedImage redTokenImage;
+	//private BufferedImage blackTokenImage;
+	//private BufferedImage emptyTokenImage;
 	
 	private LinkedList<ModelUpdateListenerI> viewsListeners = new LinkedList<ModelUpdateListenerI>();
+	private Map<Players, TokenType> playersAndTokens = new HashMap<Players, TokenType>();;
 	
 	private final int columns;
 	private final int rows;
@@ -32,10 +27,8 @@ public class Model
 		this.columns = 7;
 		this.rows = 6;
 		this.connectToWin = 4;
-		viewsListeners = new LinkedList<ModelUpdateListenerI>();
 		
 		makeNewBoard();
-		loadTokenImages();	
 	}
 	public Model(final int columns, final int rows, final int connectToWin)
 	{
@@ -45,7 +38,6 @@ public class Model
 		board = new int[this.columns][this.rows];
 		
 		makeNewBoard();
-		loadTokenImages();
 	}
 	
 	public final void addListener(final ModelUpdateListenerI listener)
@@ -57,8 +49,7 @@ public class Model
 	{
 		for(ModelUpdateListenerI listener: viewsListeners)
 		{
-			listener.initializeViews(columns, rows,
-					emptyTokenImage, Players.NONE);
+			listener.initializeViews(columns, rows, Players.NONE);
 		}
 	}
 	
@@ -72,7 +63,6 @@ public class Model
 	
 	public final void set2Players(final Players _player1, final Players _player2)
 	{
-		playersAndTokens = new HashMap<Players, TokenType>();
 		playersAndTokens.put(_player1, TokenType.BLACK);
 		playersAndTokens.put(_player2, TokenType.RED);
 	}
@@ -115,17 +105,7 @@ public class Model
 		return rows;
 	}
 	
-	public final BufferedImage getTokenImage(final TokenType token)
-	{
-		switch (token)
-		{
-			case RED:
-				return redTokenImage;
-			case BLACK:
-				return blackTokenImage;
-		}
-		return emptyTokenImage;
-	}
+
 	
 	public final boolean isAvailable(final int column, final int row)
 	{
@@ -238,19 +218,5 @@ public class Model
 			}
 		}
 		return false;
-	}
-	
-	private final void loadTokenImages()
-	{
-		try
-		{
-			redTokenImage = ImageIO.read(new File("./src/img/Red50x50.png"));
-			blackTokenImage = ImageIO.read(new File("./src/img/Black50x50.png"));
-			emptyTokenImage = ImageIO.read(new File("./src/img/Empty50x50.png"));
-		}
-		catch (IOException e)
-		{
-			System.out.println("The token image can't be loaded:\n" + e.toString());
-		}
 	}
 }

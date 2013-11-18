@@ -1,7 +1,5 @@
 package connect4;
 
-import java.awt.image.BufferedImage;
-
 public class Controller 
 {
 	private View view;
@@ -35,8 +33,8 @@ public class Controller
 		if(mostLowRow != -1)
 		{
 			model.setCurrentPlayerAtPosition(column, mostLowRow);
-			BufferedImage playerTokenImage = model.getTokenImage(model.getPlayerToken(model.getCurrentPlayer()));
-			view.updateToken(column, mostLowRow, playerTokenImage);
+			TokenType playerToken = model.getPlayerToken(model.getCurrentPlayer());
+			view.updateToken(column, mostLowRow, playerToken);
 			
 			if(model.isPositionMakeWinning(column, mostLowRow))
 			{
@@ -89,7 +87,7 @@ public class Controller
 			quitTheGame();
 		}
 		model.makeNewBoard();
-		view.makeNewPlayground(model.getTokenImage(TokenType.NONE));
+		view.makeNewPlayground();
 		
 	}
 	
