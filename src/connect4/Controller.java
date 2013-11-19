@@ -19,35 +19,34 @@ public class Controller
 	private void initializeGame(Model model)
 	{
 		view = new View(this);
+		model.makeNewBoard();
 		model.addListener(view);
 		model.initializeObserversViews();
 		// Default
-		model.setCurrentPlayer(Players.PLAYER1);
-		model.set2Players(Players.PLAYER1, Players.PLAYER2);
-		model.updateObserversViews();
+		model.setCurrentPlayer(CaseType.PLAYER1);
+		model.updateListenersCurrentPlayer();
 	}
 	
 	public final void play(final int row, final int column)
 	{
-		int mostLowRow = getColumnMostLowFreeRow(column, row);
+		int mostLowRow = model.getColumnLowestFreeRow(column);
 		if(mostLowRow != -1)
 		{
 			model.setCurrentPlayerAtPosition(column, mostLowRow);
-			TokenType playerToken = model.getPlayerToken(model.getCurrentPlayer());
-			view.updateToken(column, mostLowRow, playerToken);
+			view.updateToken(column, mostLowRow, model.getCurrentPlayer());
 			
 			if(model.isPositionMakeWinning(column, mostLowRow))
 			{
 				endOfTheGame(GameWinner.PLAYER);
 			}
-			else if(floorIsFull())
+			else if(model.floorIsFull())
 			{
 				endOfTheGame(GameWinner.NOONE);
 			}
 			else
 			{
 				model.setCurrentPlayer(model.getNextPlayer());
-				model.updateObserversViews();
+				model.updateListenersCurrentPlayer();
 			}
 		}
 	}
@@ -65,19 +64,19 @@ public class Controller
 	
 	private final void endOfTheGame(final GameWinner winner)
 	{
-		// -0: new game & 1: exit
+		// 0: new game & 1: exit
 		int endGameChoice = -1;
 		String newGameOffer = "\nWould you like to play a new game?";
 		switch(winner)
 		{
 			case PLAYER:
-				endGameChoice = view.endGameChoiceConformDialog
+				endGameChoice = view.endGameChoiceDialog
 				(
 						model.getCurrentPlayer()+" won!" + newGameOffer, "CONGRADULATION!"
 				);
 				break;
 			case NOONE:
-				endGameChoice = view.endGameChoiceConformDialog
+				endGameChoice = view.endGameChoiceDialog
 				(
 						"No one wins... It's a null!" + newGameOffer, "OHH NO!"
 				);
@@ -88,30 +87,7 @@ public class Controller
 		}
 		model.makeNewBoard();
 		view.makeNewPlayground();
-		
 	}
 	
-	private final boolean floorIsFull()
-	{
-		for(int column = 0; column < model.getFloorColumns(); column++)
-		{
-			if(getColumnMostLowFreeRow(column, 0) != -1)
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	private final int getColumnMostLowFreeRow(final int column, final int currentRow)
-	{
-		for(int row = model.getFloorRows() - 1; row >= currentRow; row--)
-		{
-				if(model.isAvailable(column, row))
-				{
-					return row;
-				}
-		}
-		return -1;
-	}
+
 }

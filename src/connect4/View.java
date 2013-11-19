@@ -73,12 +73,12 @@ public class View implements ModelUpdateListenerI
 		mainPanel.repaint();
 	}
 	
-	public final void updateToken(final int column, final int row, TokenType playerToken)
+	public final void updateToken(final int column, final int row, CaseType caseType)
 	{
 		int index = (row * floorColumns) + column;
 		playgroundPanel.remove(index);
 
-		JLabel tokenImageLabel = new JLabel(new ImageIcon(getTokenImage(playerToken)));
+		JLabel tokenImageLabel = new JLabel(new ImageIcon(getCaseImage(caseType)));
 		tokenImageLabel.addMouseListener(tokenImageMouseListener);
 		playgroundPanel.add(tokenImageLabel, index);
 
@@ -86,17 +86,17 @@ public class View implements ModelUpdateListenerI
 		mainFrame.repaint();
 	}
 	
-	public final int endGameChoiceConformDialog(final String message, final String title)
+	public final int endGameChoiceDialog(final String message, final String title)
 	{
 		return JOptionPane.showConfirmDialog(mainFrame, message, title, JOptionPane.YES_NO_OPTION);
 	}
 	
 	@Override
-	public final void initializeViews(final int floorColumns, final int floorRows, final Players defaultPlayer) 
+	public final void initializeViews(final int floorColumns, final int floorRows) 
 	{
 		this.floorColumns = floorColumns;
 		this.floorRows = floorRows;
-		playerTurnLabel = new JLabel(defaultPlayer + " turn!");
+		playerTurnLabel = new JLabel();
 
 		makeMenuBar();
 		mainPanel.add(playerTurnLabel);
@@ -111,22 +111,22 @@ public class View implements ModelUpdateListenerI
 	}
 	
 	@Override
-	public final void updateCurrentPlayer(final Players newPlayer) 
+	public final void updateCurrentPlayer(final CaseType player) 
 	{
 		getMainPanel().remove(playerTurnLabel);
-		playerTurnLabel = new JLabel(newPlayer + " turn!");
+		playerTurnLabel = new JLabel(player + " turn!");
 		getMainPanel().add(playerTurnLabel);
 		mainFrame.pack();
 		mainFrame.repaint();
 	}
 	
-	private final BufferedImage getTokenImage(final TokenType token)
+	private final BufferedImage getCaseImage(final CaseType caseType)
 	{
-		switch (token)
+		switch (caseType)
 		{
-			case RED:
+			case PLAYER1:
 				return redTokenImage;
-			case BLACK:
+			case PLAYER2:
 				return blackTokenImage;
 		}
 		return emptyTokenImage;
