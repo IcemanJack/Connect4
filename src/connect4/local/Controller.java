@@ -1,4 +1,4 @@
-package connect4;
+package connect4.local;
 
 public class Controller 
 {

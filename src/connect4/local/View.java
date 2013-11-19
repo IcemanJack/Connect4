@@ -1,4 +1,4 @@
-package connect4;
+package connect4.local;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
