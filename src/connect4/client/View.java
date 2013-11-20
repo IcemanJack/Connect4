@@ -1,6 +1,5 @@
 package connect4.client;
 
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -22,7 +21,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
 
 public class View implements IModelListener
 {
@@ -117,6 +115,16 @@ public class View implements IModelListener
 	{
 		getMainPanel().remove(playerTurnLabel);
 		playerTurnLabel = new JLabel(player + " turn!");
+		getMainPanel().add(playerTurnLabel);
+		mainFrame.pack();
+		mainFrame.repaint();
+	}
+	// TODO TEMP
+	@Override
+	public void updateActionCounter(int i) 
+	{
+		getMainPanel().remove(playerTurnLabel);
+		playerTurnLabel = new JLabel(i + " new client!");
 		getMainPanel().add(playerTurnLabel);
 		mainFrame.pack();
 		mainFrame.repaint();

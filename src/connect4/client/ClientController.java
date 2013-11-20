@@ -1,16 +1,13 @@
 package connect4.client;
 
 import java.io.IOException;
-
-import java.rmi.server.UID;
-
 import connect4.server.IMyServer;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
 
 // TODO change to extends Client
-public class ClientController implements IViewClient
+public class ClientController
 {
 	Client client;
 	IMyServer myRemoteObject;
@@ -20,7 +17,7 @@ public class ClientController implements IViewClient
 	int serverPort;
 	IModelListener view;
 	
-	UID uid;
+	String uid;
 	
 	public ClientController()
 	{
@@ -41,7 +38,7 @@ public class ClientController implements IViewClient
 	public void play(final int row, final int column)
 	{
 		System.out.println("Starting action from client");
-		myRemoteObject.play(row, column);
+		myRemoteObject.play();
 		System.out.println("finishing action from client");
 	}
 	
