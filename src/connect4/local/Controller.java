@@ -45,6 +45,7 @@ public class Controller
 			}
 			else
 			{
+				new Computer(model);
 				model.setCurrentPlayer(model.getNextPlayer());
 				model.updateListenersCurrentPlayer();
 			}

@@ -4,7 +4,7 @@ import java.util.LinkedList;
 
 public class Model
 {
-	private CaseType[][] board;
+	public CaseType[][] board;
 	
 	private LinkedList<ModelUpdateListenerI> viewsListeners = new LinkedList<ModelUpdateListenerI>();
 	
