@@ -1,0 +1,34 @@
+Install PostGreSQL
+(Windows): http://www.enterprisedb.com/products-services-training/pgdownload#windows
+Currently using 9.3.1
+
+SuperAdmin: user: postgres
+			password: mypassword
+			
+Do not execute Stack Builder at the end.
+
+Open pgAdmin III
+Add Server
+	Name: Connect4
+	Host: localhost
+	Port: 5432
+	Maintenance: postgres
+	Username: postgres
+	Password: mypassword
+	[X] save password
+	
+Creating the DB
+	Right click on Databases
+	Add Database...
+		Name: postgres
+		encoding: UTF8
+	
+	Add Tables ****
+	
+*******************************************************************************
+Connect the DB to Eclipse
+
+	Download the driver: http://jdbc.postgresql.org/download.html   JDBC41
+	Include the lib and make sure it have been added in the Classpath
+	SHOULD BE INCLUDED WITH THE SYNC
+*******************************************************************************
