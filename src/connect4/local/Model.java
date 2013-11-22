@@ -8,9 +8,9 @@ public class Model
 	
 	private LinkedList<ModelUpdateListenerI> viewsListeners = new LinkedList<ModelUpdateListenerI>();
 	
-	private final int columns;
-	private final int rows;
-	private final int connectToWin;
+	public final int columns;
+	public final int rows;
+	public final int connectToWin;
 	
 	private CaseType currentPlayer;
 	

@@ -14,12 +14,9 @@ public class Computer
 	
 	public void initCurrentTableToken()
 	{
-		int totalColumns = 7;
-		int totalRows = 6;
-		
-		for (int i = 0; i < totalColumns; i++)
+		for (int i = 0; i < model.columns; i++)
 		{
-			for (int j = 0; j < totalRows; j++)
+			for (int j = 0; j < model.rows; j++)
 			{
 				System.out.println(model.board[i][j]);
 			}
