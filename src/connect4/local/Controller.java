@@ -30,22 +30,25 @@ public class Controller
 	public final void play(final int row, final int column)
 	{
 		int mostLowRow = model.getColumnLowestFreeRow(column);
-		if(mostLowRow != -1)
+		if (mostLowRow != -1)
 		{
 			model.setCurrentPlayerAtPosition(column, mostLowRow);
 			view.updateToken(column, mostLowRow, model.getCurrentPlayer());
 			
-			if(model.isPositionMakeWinning(column, mostLowRow))
+			if (model.isPositionMakeWinning(column, mostLowRow))
 			{
 				endOfTheGame(GameWinner.PLAYER);
 			}
-			else if(model.floorIsFull())
+			else if (model.floorIsFull())
 			{
 				endOfTheGame(GameWinner.NOONE);
 			}
 			else
 			{
-				new Computer(model);
+				if (model.getCurrentPlayer() == CaseType.PLAYER1)
+				{
+					new Computer(this, model, column, mostLowRow);
+				}
 				model.setCurrentPlayer(model.getNextPlayer());
 				model.updateListenersCurrentPlayer();
 			}
