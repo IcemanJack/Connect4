@@ -3,7 +3,6 @@ package connect4.server;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,9 +25,9 @@ public class Model implements IModel
 
 	private CaseType[][] board;
 	
-	private AtomicInteger columns;
-	private AtomicInteger rows;
-	private AtomicInteger connectToWin;
+	private AtomicInteger columns = new AtomicInteger();
+	private AtomicInteger rows = new AtomicInteger();
+	private AtomicInteger connectToWin = new AtomicInteger();
 	
 	private String player1;
 	private String player2;
@@ -48,40 +47,35 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void addModelListener(String username, IModelListener modelListener)
+	public String addModelListener(String username, IModelListener modelListener)
 	{
 		if(viewsListeners.containsKey(username))
 		{
-			username = getNextAvailableUsername(username);
-			modelListener.updateListenerNotAvailableUsername(username);
+			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
 		addNewPlayer(username);
+		System.out.println("Adding " + username + " to players");
 		viewsListeners.put(username, modelListener);
+		return username;
 	}
 	
 	@Override
 	public void removeModelListener(String username) 
 	{
+		// TODO if the client closes or kills the app make them call this, or he wont be.
 		removePlayer(username);
 		viewsListeners.remove(username);
 	}
 	
 	@Override
-	public void initializeListenersBoard() 
+	public void initializeListenerBoard(IModelListener listener) 
 	{
-		Runnable task;
-		Iterator<Entry<String, IModelListener>> viewsListenersIterator =
-				viewsListeners.entrySet().iterator();
-		System.out.println("Starting threads to ilb.");
-		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
-		while(viewsListenersIterator.hasNext())
-		{
-			IModelListener listener = viewsListenersIterator.next().getValue();
-			task = new InitializeListenerBoard(listener, columns.get(), rows.get());
-			executor.execute(task);
-		}
+		System.out.println("Starting thread to init board.");
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		Runnable task = new InitializeListenerBoard(listener, columns.get(), rows.get());
+		executor.execute(task);
 		executor.shutdown();
-	    System.out.println("Finished all threads of ilb.");
+	    System.out.println("Board initialized");
 	}
 	
 	@Override
@@ -358,18 +352,15 @@ public class Model implements IModel
 		return caseType;
 	}
 	
-	private String getNextAvailableUsername(String username)
+	private String getNextAvailableUsername(String username, String newUsername, int counter)
 	{
-		String newUsername = username;
-		for(int number = 0; number < 1000; number++)
+		if(viewsListeners.containsKey(newUsername))
 		{
-			newUsername.concat(String.valueOf(number));
-			if(!viewsListeners.containsKey(newUsername))
-			{
-				return newUsername;
-			}
+			counter++;
+			newUsername = username.concat(String.valueOf(counter));
+			getNextAvailableUsername(username, newUsername, counter);
 		}
-		return "YOLO".concat(String.valueOf(new Random(1000)));
+		return newUsername;
 	}
 	
 	private class InitializeListenerBoard implements Runnable 

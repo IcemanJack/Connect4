@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -43,9 +45,13 @@ public class View implements IModelListener
 	{
 		// INIT
 		this.controller = controller;
+		
 		mainFrame = new JFrame();
+		mainFrame.addWindowListener(windowListener);
+		
 		mainPanel = new JPanel(new GridLayout(2, 1));
 		mainPanel.setName("MainPanel");
+		
 		loadTokenImages();
 	}
 	
@@ -96,6 +102,7 @@ public class View implements IModelListener
 	@Override
 	public void initializeView( int floorColumns, int floorRows) 
 	{
+		System.out.println("Initialzing view");
 		this.floorColumns = floorColumns;
 		this.floorRows = floorRows;
 		playerTurnLabel = new JLabel();
@@ -187,7 +194,7 @@ public class View implements IModelListener
 	private ActionListener exitSubMenuListener = new ActionListener()
 	{
 		@Override
-		public void actionPerformed( ActionEvent e) 
+		public void actionPerformed(ActionEvent e) 
 		{
 			controller.quitTheGame();
 		}
@@ -238,6 +245,51 @@ public class View implements IModelListener
 		public void mouseReleased(MouseEvent e) 
 		{
 			// TODO Auto-generated method stub
+		}
+	};
+	
+	private final WindowListener windowListener = new WindowListener() 
+	{
+
+		@Override
+		public void windowActivated(WindowEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void windowClosed(WindowEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void windowClosing(WindowEvent arg0) 
+		{
+			controller.quitTheGame();
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void windowDeiconified(WindowEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void windowIconified(WindowEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void windowOpened(WindowEvent arg0) {
+			// TODO Auto-generated method stub
+			
 		}
 	};
 }

@@ -3,6 +3,7 @@ package connect4.client;
 import java.io.IOException;
 
 import connect4.server.IMyServer;
+import connect4.server.MyServer;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
@@ -29,8 +30,8 @@ public class ClientController
 		serverPort = 12345;
 		username = "MadJack";
 		
-		startClient();
 		makeCustomView();
+		startClient();
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -39,8 +40,8 @@ public class ClientController
 		this.serverPort = serverPort;
 		this.username = username;
 		
-		startClient();
 		makeCustomView();
+		startClient();
 	}
 	
 	public void makeMove(final int row, final int column)
@@ -64,21 +65,11 @@ public class ClientController
 	private void makeCustomView()
 	{
 		view = new View(this);
-		try 
-		{
-			callHandler.registerGlobal(IModelListener.class, view);
-		}
-		catch (LipeRMIException e) 
-		{
-			e.printStackTrace();
-		}
-		
-		String serverResponse = myRemoteObject.registerListener(username, view);
-		System.out.println(serverResponse);
 	}
 	
 	private void startClient()
 	{
+		System.out.println("Client is starting...");
 		callHandler = new CallHandler();
 		try 
 		{
@@ -90,6 +81,27 @@ public class ClientController
 			e.printStackTrace();
 		}
 		System.out.println("Client started");
+		registerAtServer();
+	}
+	
+	private void registerAtServer()
+	{
+		try 
+		{
+			callHandler.registerGlobal(IModelListener.class, view);
+		}
+		catch (LipeRMIException e) 
+		{
+			e.printStackTrace();
+		}
+		System.out.println("Registering listener");
+		String serverResponse = myRemoteObject.registerListener(username, view);
+		System.out.println(serverResponse);
+		
+		if(serverResponse.equals(MyServer.GAME_FULL))
+		{
+			quitTheGame();
+		}
 	}
 	
 	private void disconnectClient()

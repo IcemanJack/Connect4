@@ -2,6 +2,7 @@ package connect4.server;
 
 import java.io.IOException;
 import java.net.Socket;
+
 import net.sf.lipermi.net.IServerListener;
 
 import connect4.client.IModelListener;
@@ -26,7 +27,7 @@ public class MyServer extends Server implements IMyServer, UserMessages
 		model = new Model();
 		initializeGame();
 	}
-	
+
 	MyServer(int columns, int rows, int connectToWin)
 	{
 		model = new Model(columns, rows, connectToWin);
@@ -38,7 +39,9 @@ public class MyServer extends Server implements IMyServer, UserMessages
 	{
 		if(model.playerAvailable())
 		{
-			model.addModelListener(username, client);
+			// if username not available will return a new one
+			username = model.addModelListener(username, client);
+			model.initializeListenerBoard(client);
 			// last player starts.
 			model.setCurrentPlayer(username);
 			model.updateListenersCurrentPlayer();
@@ -90,12 +93,12 @@ public class MyServer extends Server implements IMyServer, UserMessages
 
 	private void initializeGame()
 	{
-		if(startServer())
+		if(!startServer())
 		{
-			System.out.println("Server ready");
-			model.makeNewBoard();
+			System.out.println("Server failed to start");
 		}
-		System.out.println("Server failed to start");
+		System.out.println("Server ready");
+		model.makeNewBoard();
 	}
 	
 	private boolean startServer()
