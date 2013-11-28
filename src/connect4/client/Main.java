@@ -1,6 +1,10 @@
 package connect4.client;
 
-public class Main 
+/* ARGS
+ * [1] ipv4
+ * [2] username
+ */
+public class Main
 {
 	public static void main(String[] args)
 	{
@@ -10,7 +14,7 @@ public class Main
 		}
 		else
 		{
-			new ClientController(args[1], 12345);
+			new ClientController(args[1], 12345, args[2]);
 		}
 	}
 }

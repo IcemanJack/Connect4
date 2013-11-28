@@ -22,6 +22,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import connect4.server.CaseType;
+
 public class View implements IModelListener
 {
 	private BufferedImage redTokenImage;
@@ -35,9 +37,9 @@ public class View implements IModelListener
 	
 	private int floorRows;
 	private int floorColumns;
-	private final ClientController controller;
+	private ClientController controller;
 	
-	public View(final ClientController controller)
+	public View( ClientController controller)
 	{
 		// INIT
 		this.controller = controller;
@@ -73,7 +75,7 @@ public class View implements IModelListener
 		mainPanel.repaint();
 	}
 	
-	public final void updateToken(final int column, final int row, CaseType caseType)
+	public void updateToken( int column, int row, CaseType caseType)
 	{
 		int index = (row * floorColumns) + column;
 		playgroundPanel.remove(index);
@@ -86,13 +88,13 @@ public class View implements IModelListener
 		mainFrame.repaint();
 	}
 	
-	public final int endGameChoiceDialog(final String message, final String title)
+	public int endGameChoiceDialog( String message, String title)
 	{
 		return JOptionPane.showConfirmDialog(mainFrame, message, title, JOptionPane.YES_NO_OPTION);
 	}
 	
 	@Override
-	public final void initializeViews(final int floorColumns, final int floorRows) 
+	public void initializeView( int floorColumns, int floorRows) 
 	{
 		this.floorColumns = floorColumns;
 		this.floorRows = floorRows;
@@ -103,7 +105,7 @@ public class View implements IModelListener
 		mainFrame.getContentPane().add(mainPanel);
 		makeNewPlayground();
 		
-	    mainFrame.pack();
+	  mainFrame.pack();
 		mainFrame.setResizable(false);
 		mainFrame.setLocationRelativeTo(null);
 		mainFrame.setVisible(true);
@@ -111,7 +113,7 @@ public class View implements IModelListener
 	}
 	
 	@Override
-	public final void updateCurrentPlayer(final CaseType player) 
+	public void updateCurrentPlayer(String player) 
 	{
 		getMainPanel().remove(playerTurnLabel);
 		playerTurnLabel = new JLabel(player + " turn!");
@@ -119,18 +121,14 @@ public class View implements IModelListener
 		mainFrame.pack();
 		mainFrame.repaint();
 	}
-	// TODO TEMP
+	
 	@Override
-	public void updateActionCounter(int i) 
+	public void updateListenerNotAvailableUsername(String username)
 	{
-		getMainPanel().remove(playerTurnLabel);
-		playerTurnLabel = new JLabel(i + " new client!");
-		getMainPanel().add(playerTurnLabel);
-		mainFrame.pack();
-		mainFrame.repaint();
+		controller.updateNotAvailableUsername(username);
 	}
 	
-	private final BufferedImage getCaseImage(final CaseType caseType)
+	private BufferedImage getCaseImage( CaseType caseType)
 	{
 		switch (caseType)
 		{
@@ -144,25 +142,25 @@ public class View implements IModelListener
 	
 	private void makeMenuBar()
 	{
-	    JMenuBar menuBar = new JMenuBar();
-	    
-	    JMenu fileMenu = new JMenu("File");  
-	    fileMenu.setMnemonic(KeyEvent.VK_F);
-	    
-	    JMenuItem quitSubMenu = new JMenuItem("Exit", KeyEvent.VK_E);
-	    quitSubMenu.addActionListener(exitSubMenuListener);
-	    
-	    fileMenu.add(quitSubMenu);
-	    menuBar.add(fileMenu);
-	    mainPanel.add(menuBar);
+	  JMenuBar menuBar = new JMenuBar();
+	  
+	  JMenu fileMenu = new JMenu("File"); 
+	  fileMenu.setMnemonic(KeyEvent.VK_F);
+	  
+	  JMenuItem quitSubMenu = new JMenuItem("Exit", KeyEvent.VK_E);
+	  quitSubMenu.addActionListener(exitSubMenuListener);
+	  
+	  fileMenu.add(quitSubMenu);
+	  menuBar.add(fileMenu);
+	  mainPanel.add(menuBar);
 	}
 	
-	private final JPanel getMainPanel()
+	private JPanel getMainPanel()
 	{
 		return (JPanel) mainFrame.getContentPane().getComponents()[0];
 	}
 
-	private final int[] getClickedImageLabel(final JLabel imageLabel)
+	private int[] getClickedImageLabel( JLabel imageLabel)
 	{
 		int[] clickedImageXY = new int[2];
 		for(Component component: playgroundPanel.getComponents())
@@ -186,16 +184,16 @@ public class View implements IModelListener
 		return clickedImageXY;
 	}
 
-	private final ActionListener exitSubMenuListener = new ActionListener()
+	private ActionListener exitSubMenuListener = new ActionListener()
 	{
 		@Override
-		public final void actionPerformed(final ActionEvent e) 
+		public void actionPerformed( ActionEvent e) 
 		{
 			controller.quitTheGame();
 		}
 	};
 	
-	private final void loadTokenImages()
+	private void loadTokenImages()
 	{
 		try
 		{
@@ -209,13 +207,13 @@ public class View implements IModelListener
 		}
 	}
 	
-	private final MouseListener tokenImageMouseListener = new MouseListener()
+	private MouseListener tokenImageMouseListener = new MouseListener()
 	{
 		@Override
 		public void mouseClicked(MouseEvent e) 
 		{
 			int[] clickedImageXY = getClickedImageLabel((JLabel) e.getSource());
-			controller.play(clickedImageXY[0], clickedImageXY[1]);
+			controller.makeMove(clickedImageXY[0], clickedImageXY[1]);
 		}
 
 		@Override

@@ -125,7 +125,7 @@ public class Model
 		}
 	}
 	
-	public final CaseType getPositionCaseType(final int column, final int row)
+	private final CaseType getPositionCaseType(final int column, final int row)
 	{
 		CaseType caseType = null;
 		try

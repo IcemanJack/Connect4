@@ -2,11 +2,11 @@ package connect4.server;
 
 import connect4.client.IModelListener;
 
+// used by client
 public interface IMyServer 
 {
-	public String registerListener(IModelListener client);
-	public void unregisterListener(String uid);
-	// temp
-	public void play();
-	//public void play(int row, int column);
+	String registerListener(String username, IModelListener client);
+	void unregisterListener(String username);
+	
+	String makeMove(int column, int row, String player);
 }
