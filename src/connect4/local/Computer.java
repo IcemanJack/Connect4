@@ -11,125 +11,165 @@ public class Computer
 	{
 		this.controller = controller;
 		this.model = model;
+		computerPlay(mostLowRow);
+	}
+	
+	private boolean computerPlay(int mostLowRow)
+	{
+		for (int i = 0; i < model.columns; i++)
+		{
+			for (int j = 0; j < model.rows; j++)
+			{
+				if (model.isPositionMakeWinning(i, j) && model.isAvailable(i, j))
+				{
+					play(j, i);
+					return true;
+				}
+			}
+		}
 		
+		play(mostLowRow, getRandomNumber(0, model.columns - 1));
+		return false;
+	}
+	
+	private void play(int mostLowRow, int column)
+	{
 		model.setCurrentPlayer(model.getNextPlayer());
-		System.out.println("(" + column + ", " + mostLowRow + ")");
-		
-		computerPlay(column, mostLowRow);
-		
+		controller.play(mostLowRow, column);
 		model.setCurrentPlayer(model.getNextPlayer());
 	}
 	
-	public void computerPlay(int column, int mostLowRow)
+	private int getRandomNumber(int lowerRandomNumber, int higherRandomNumber)
 	{
-		checkAroundCurrentToken(column, mostLowRow);
-		
-		if (checkIfThreeTokenComputer())
-		{
-			// Attaque
-		}
-		else if (checkIfThreeTokenPlayer1())
-		{
-			// Defense
-		}
-		else if (checkIfTwoOrOneTokenComputer())
-		{
-			// Attaque
-		}
-		else
-		{
-			// Random move
-		}
-		
-		// controller.play(mostLowRow, column);
+		return lowerRandomNumber + (int)(Math.random() * higherRandomNumber);
 	}
 	
-	public boolean checkIfThreeTokenComputer()
-	{
-		return false;
-	}
-	public boolean checkIfTwoOrOneTokenComputer()
-	{
-		return false;
-	}
 	
-	public boolean checkIfThreeTokenPlayer1()
-	{
-		return false;
-	}
+//	public void computerPlay(int column, int mostLowRow)
+//	{
+//		checkAroundCurrentToken(column, mostLowRow);
+//	}
+//	
+//	public boolean checkIfThreeTokenComputer()
+//	{
+//		return false;
+//	}
+//	
+//	public boolean checkIfTwoOrOneTokenComputer()
+//	{		
+//		return false;
+//	}
 	
-	public void checkAroundCurrentToken(int column, int mostLowRow)
-	{
-		checkRightHorizontalPosition(column, mostLowRow);
-		checkLeftHorizontalPosition(column, mostLowRow);
-		checkUpVerticalPosition(column, mostLowRow);
-		checkUpLeftDiagonalPosition(column, mostLowRow);
-		checkUpRightDiagonalPosition(column, mostLowRow);
-		checkDownLeftDiagonalPosition(column, mostLowRow);
-		checkDownRightDiagonalPosition(column, mostLowRow);
-	}
 	
-	public final boolean checkRightHorizontalPosition(int column, final int mostLowRow)
-	{
-		if (column < model.columns - 1 && model.isAvailable(column + 1, mostLowRow))
-		{
-			System.out.println("nothing right");
-			return true;
-		}
-		return false;
-	}
-	public final boolean checkLeftHorizontalPosition(int column, final int mostLowRow)
-	{
-		if (column > 0 && model.isAvailable(column - 1, mostLowRow))
-		{
-			System.out.println("nothing left");
-			return true;
-		}
-		return false;
-	}
-	public final boolean checkUpVerticalPosition(final int column, final int row)
-	{
-		if (row > 0 && model.isAvailable(column, row - 1))
-		{
-			System.out.println("nothing up");
-			return true;
-		}
-		return false;
-	}
-	public final boolean checkUpLeftDiagonalPosition(final int column, final int row)
-	{
-		if (column > 0 && row > 0 && model.isAvailable(column - 1, row - 1))
-		{
-			System.out.println("nothing up-left-diagonal");
-			return true;
-		}
-		return false;
-	}
-	public final boolean checkUpRightDiagonalPosition(final int column, final int row)
-	{
-		if (column < model.columns - 1 && row > 0 && model.isAvailable(column + 1, row - 1))
-		{
-			System.out.println("nothing up-right-diagonal");
-			return true;
-		}
-		return false;
-	}
-	public final boolean checkDownLeftDiagonalPosition(final int column, final int row)
-	{
-		if (column > 0 && row < model.rows - 1 && model.isAvailable(column - 1, row + 1))
-		{
-			System.out.println("nothing down-left-diagonal");
-			return true;
-		}
-		return false;
-	}
-	public final boolean checkDownRightDiagonalPosition(final int column, final int row)
-	{
-		if (column < model.columns - 1 && row < model.rows - 1 && model.isAvailable(column + 1, row + 1))
-		{
-			System.out.println("nothing down-left-diagonal");
-			return true;
-		}
-		return false;
-	}
+//	public void checkAroundCurrentToken(int column, int mostLowRow)
+//	{
+//		checkRightHorizontalPosition(column, mostLowRow);
+//		checkLeftHorizontalPosition(column, mostLowRow);
+//		checkUpVerticalPosition(column, mostLowRow);
+//		checkUpLeftDiagonalPosition(column, mostLowRow);
+//		checkUpRightDiagonalPosition(column, mostLowRow);
+//		checkDownLeftDiagonalPosition(column, mostLowRow);
+//		checkDownRightDiagonalPosition(column, mostLowRow);
+//	}
+
+//	public int checkRightHorizontalPosition(int column, final int mostLowRow, CaseType caseType)
+//	{
+//		int x = 0;
+//		
+//		while (model.board[column][mostLowRow] == caseType)
+//		{
+//			x++;
+//			column++;
+//		}
+//		
+//		if(x == 3)
+//		{
+//			controller.play(mostLowRow, column + 3);
+//		}
+//		
+//		return x;
+//	}
+	
+//	public final boolean checkLeftHorizontalPosition(int column, final int mostLowRow)
+//	{
+//		if (column > 0 && model.isAvailable(column - 1, mostLowRow))
+//		{
+//			System.out.println("nothing left");
+//			return true;
+//		}
+//		return false;
+//	}
+//	public final boolean checkUpVerticalPosition(final int column, final int row)
+//	{
+//		if (row > 0 && model.isAvailable(column, row - 1))
+//		{
+//			System.out.println("nothing up");
+//			return true;
+//		}
+//		return false;
+//	}
+//	public final boolean checkUpLeftDiagonalPosition(final int column, final int row)
+//	{
+//		if (column > 0 && row > 0 && model.isAvailable(column - 1, row - 1))
+//		{
+//			System.out.println("nothing up-left-diagonal");
+//			return true;
+//		}
+//		return false;
+//	}
+//	public final boolean checkUpRightDiagonalPosition(final int column, final int row)
+//	{
+//		if (column < model.columns - 1 && row > 0 && model.isAvailable(column + 1, row - 1))
+//		{
+//			System.out.println("nothing up-right-diagonal");
+//			return true;
+//		}
+//		return false;
+//	}
+//	public final boolean checkDownLeftDiagonalPosition(final int column, final int row)
+//	{
+//		if (column > 0 && row < model.rows - 1 && model.isAvailable(column - 1, row + 1))
+//		{
+//			System.out.println("nothing down-left-diagonal");
+//			return true;
+//		}
+//		return false;
+//	}
+//	public final boolean checkDownRightDiagonalPosition(final int column, final int row)
+//	{
+//		if (column < model.columns - 1 && row < model.rows - 1 && model.isAvailable(column + 1, row + 1))
+//		{
+//			System.out.println("nothing down-left-diagonal");
+//			return true;
+//		}
+//		return false;
+//	}
+	
+//	if (checkIfThreeTokenComputer(column, mostLowRow))
+//	{
+//		// Attaque
+//	}
+//	else if (checkIfThreeTokenPlayer1(column, mostLowRow))
+//	{
+//		// Defense
+//		System.out.println("3TokenPlayer1");
+//	}
+//	else if (checkIfTwoOrOneTokenComputer())
+//	{
+//		// Attaque
+//	}
+//	else
+//	{
+//		// Random move
+//	}
+	
+	// controller.play(mostLowRow, column);
+	
+//	if (model.board[column][mostLowRow] == CaseType.PLAYER1)
+//	{
+//		if (checkRightHorizontalPosition(column, mostLowRow, CaseType.PLAYER1) == 3)
+//		{
+//			System.out.println("player 1");
+//		}
+//	}
 }

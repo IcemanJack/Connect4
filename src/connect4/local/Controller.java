@@ -45,10 +45,11 @@ public class Controller
 			}
 			else
 			{
-				if (model.getCurrentPlayer() == CaseType.PLAYER1)
+				if (model.getNextPlayer() == CaseType.PLAYER2)
 				{
 					new Computer(this, model, column, mostLowRow);
 				}
+				
 				model.setCurrentPlayer(model.getNextPlayer());
 				model.updateListenersCurrentPlayer();
 			}
