@@ -56,6 +56,13 @@ public class ClientController
 		this.username = username;
 	}
 	
+	/* TODO 
+	 * Must be called if
+	 * 	Client closes windows
+	 * 	Client click exit
+	 * 	Client stops the application
+	 * 	Client kills the process
+	 */
 	public void quitTheGame()
 	{
 		disconnectClient();
@@ -106,6 +113,7 @@ public class ClientController
 	
 	private void disconnectClient()
 	{
+		System.out.println("****! Disconnection client...");
 		myRemoteObject.unregisterListener(username);
 		try 
 		{

@@ -80,8 +80,8 @@ public class View implements IModelListener
 		mainFrame.pack();
 		mainPanel.repaint();
 	}
-	
-	public void updateToken( int column, int row, CaseType caseType)
+	@Override
+	public void updateCase(int column, int row, CaseType caseType)
 	{
 		int index = (row * floorColumns) + column;
 		playgroundPanel.remove(index);
@@ -94,7 +94,7 @@ public class View implements IModelListener
 		mainFrame.repaint();
 	}
 	
-	public int endGameChoiceDialog( String message, String title)
+	public int endGameChoiceDialog(String message, String title)
 	{
 		return JOptionPane.showConfirmDialog(mainFrame, message, title, JOptionPane.YES_NO_OPTION);
 	}
@@ -122,6 +122,7 @@ public class View implements IModelListener
 	@Override
 	public void updateCurrentPlayer(String player) 
 	{
+		System.out.println("Updating current player");
 		getMainPanel().remove(playerTurnLabel);
 		playerTurnLabel = new JLabel(player + " turn!");
 		getMainPanel().add(playerTurnLabel);
@@ -135,7 +136,7 @@ public class View implements IModelListener
 		controller.updateNotAvailableUsername(username);
 	}
 	
-	private BufferedImage getCaseImage( CaseType caseType)
+	private BufferedImage getCaseImage(CaseType caseType)
 	{
 		switch (caseType)
 		{

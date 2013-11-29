@@ -78,6 +78,7 @@ public class MyServer extends Server implements IMyServer, UserMessages
 		{
 			if(model.makeMove(column, mostLowRow, player))
 			{
+				model.updateListenersBoardCase(column, mostLowRow, player);
 				model.makeNextPlayerCurrent();
 				model.updateListenersCurrentPlayer();
 				

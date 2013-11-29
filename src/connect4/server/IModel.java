@@ -10,7 +10,7 @@ public interface IModel
 	
 	void initializeListenerBoard(IModelListener listener);
 	void updateListenersCurrentPlayer();
-	//void updateListenersBoard();
+	void updateListenersBoardCase(int column, int row, String player);
 	
 	void makeNewBoard();
 	boolean makeMove(int column, int row, String player);

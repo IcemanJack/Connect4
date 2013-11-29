@@ -1,8 +1,6 @@
 package connect4.server;
 
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +19,7 @@ import connect4.server.CaseType;
 public class Model implements IModel
 {
 	// UserName, Listener
-	public Map<String, IModelListener> viewsListeners = new TreeMap<String, IModelListener>();
+	private Map<String, IModelListener> viewsListeners = new TreeMap<String, IModelListener>();
 
 	private CaseType[][] board;
 	
@@ -54,17 +52,16 @@ public class Model implements IModel
 			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
 		addNewPlayer(username);
-		System.out.println("Adding " + username + " to players");
 		viewsListeners.put(username, modelListener);
+		printListOfUsernamesInList("New player added. ");
 		return username;
 	}
-	
 	@Override
 	public void removeModelListener(String username) 
 	{
-		// TODO if the client closes or kills the app make them call this, or he wont be.
 		removePlayer(username);
 		viewsListeners.remove(username);
+		printListOfUsernamesInList("Player removed. ");
 	}
 	
 	@Override
@@ -82,20 +79,37 @@ public class Model implements IModel
 	public void updateListenersCurrentPlayer() 
 	{
 		Runnable task;
-		Iterator<Entry<String, IModelListener>> viewsListenersIterator =
-				viewsListeners.entrySet().iterator();
-		System.out.println("Starting threads to ucp.");
+		System.out.println("Updating current player.");
 		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
-		while(viewsListenersIterator.hasNext())
+		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
 		{
-			IModelListener listener = viewsListenersIterator.next().getValue();
-			task = new UpdateListenerCurrentPlayer(listener, currentPlayer);
+			task = new UpdateListenerCurrentPlayer(entry.getValue(), currentPlayer);
 			executor.execute(task);
 		}
 		executor.shutdown();
-	    System.out.println("Finished all threads to ucp.");
+	    System.out.println("Finished all threads.");
 	}
 	
+	@Override
+	public void updateListenersBoardCase(int column, int row, String player)
+	{
+		Runnable task;
+		System.out.println("Updating board case.");
+		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
+		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		{
+			task = new UpdateListenerBoardCase
+					(
+							entry.getValue(),
+							column,
+							row,
+							getPlayerCaseType(player)
+					);
+			executor.execute(task);
+		}
+		executor.shutdown();
+	    System.out.println("Finished all threads.");
+	}
 	
 	@Override
 	public void makeNewBoard()
@@ -279,6 +293,24 @@ public class Model implements IModel
 		return checkIfWinningCases(winningCases);
 	}
 	
+	private void printListOfUsernamesInList(String header)
+	{
+		String output = header + " Usernames: [";
+		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		{
+			output += entry.getKey() + ",";
+		}
+		if (output.endsWith(","))
+		{
+			output = output.substring(0, output.length() - 1) + "]";
+		}
+		else if (output.endsWith("["))
+		{
+			output += "]";
+		}
+		System.out.println(output);
+	} 
+	
 	private void addNewPlayer(String player)
 	{
 		if(player1.isEmpty())
@@ -382,7 +414,7 @@ public class Model implements IModel
 		  {
 			  try 
 			  {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			  } 
 			  catch (InterruptedException e)
 			  {
@@ -408,7 +440,7 @@ public class Model implements IModel
 		  {
 			  try 
 			  {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			  } 
 			  catch (InterruptedException e)
 			  {
@@ -417,6 +449,35 @@ public class Model implements IModel
 			  listener.updateCurrentPlayer(player);
 		  }
 	}
+	
+	private class UpdateListenerBoardCase implements Runnable 
+	{
+		  private IModelListener listener;
+		  private int column;
+		  private int row;
+		  private CaseType caseType;
+		  
+		  public UpdateListenerBoardCase(IModelListener listener, 
+				  int columns, int rows, CaseType caseType) 
+		  {
+			  this.listener = listener;
+			  this.column = columns;
+			  this.row = rows;
+			  this.caseType = caseType;
+		  }
 
-
+		  @Override
+		  public void run() 
+		  {
+			  try 
+			  {
+				Thread.sleep(100);
+			  } 
+			  catch (InterruptedException e)
+			  {
+				e.printStackTrace();
+			  }
+			  listener.updateCase(column, row, caseType);
+		  }
+	}
 }
