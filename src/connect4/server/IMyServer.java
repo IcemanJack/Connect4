@@ -5,8 +5,8 @@ import connect4.client.IModelListener;
 // used by client
 public interface IMyServer 
 {
-	String registerListener(String username, IModelListener client);
+	Status registerListener(String username, IModelListener client);
 	void unregisterListener(String username);
 	
-	String makeMove(int column, int row, String player);
+	Status makeMove(int column, int row, String player);
 }

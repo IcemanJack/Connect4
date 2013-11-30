@@ -47,7 +47,7 @@ public class Controller
 			{
 				if (model.getNextPlayer() == CaseType.PLAYER2)
 				{
-					new Computer(this, model, column, mostLowRow);
+					//new Computer(this, model, column, mostLowRow);
 				}
 				
 				model.setCurrentPlayer(model.getNextPlayer());

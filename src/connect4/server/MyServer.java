@@ -15,7 +15,7 @@ import net.sf.lipermi.net.Server;
  * 
  */
 
-public class MyServer extends Server implements IMyServer, UserMessages
+public class MyServer extends Server implements IMyServer
 {
 	static private int serverPort = 12345;
 	
@@ -35,19 +35,22 @@ public class MyServer extends Server implements IMyServer, UserMessages
 	}
 
 	@Override
-	public synchronized String registerListener(String username, IModelListener client)
+	public synchronized Status registerListener(String username, IModelListener client)
 	{
-		if(model.playerAvailable())
+		if(!model.playerAvailable())
 		{
-			// if username not available will return a new one
-			username = model.addModelListener(username, client);
-			model.initializeListenerBoard(client);
-			// last player starts.
-			model.setCurrentPlayer(username);
-			model.updateListenersCurrentPlayer();
-			return MyServer.WELCOME;
+			return Status.GAME_FULL;
 		}
-		return MyServer.GAME_FULL;
+		// will return incremented one if used
+		username = model.addModelListener(username, client);
+		model.initializeListenerBoard(client);
+		model.updateUsername(username, client);
+		
+		// last player starts.
+		model.setCurrentPlayer(username);
+		model.updateListenersCurrentPlayer();
+		
+		return Status.OPERATION_DONE;
 	}
 	@Override
 	public synchronized void unregisterListener(String username) 
@@ -56,40 +59,47 @@ public class MyServer extends Server implements IMyServer, UserMessages
 	}
 	
 	@Override
-	public synchronized String makeMove(int column, int row, String player)
+	public synchronized Status makeMove(int column, int row, String player)
 	{
 		if(!model.playerIsLoggedIn(player))
 		{
-			return MyServer.USER_NOT_PLAYING;
+			return Status.USER_NOT_PLAYING;
 		}
-		
-		if(model.playerAvailable())
+		else if(model.playerAvailable())
 		{
-			return MyServer.WAITING_FOR_SECOND_PLAYER;
+			return Status.WAITING_FOR_SECOND_PLAYER;
 		}
-		
-		if(model.floorFull())
+		else if(!model.getCurrentPlayer().equals(player))
 		{
-			return NOONE_WON;
+			return Status.NOT_YOUR_TURN;
+		}
+		else if(model.floorFull())
+		{
+			return Status.ITS_A_NULL;
 		}
 		
 		int mostLowRow = model.getColumnLowestFreeRow(column);
-		if (mostLowRow != -1)
+		if(mostLowRow == -1)
 		{
-			if(model.makeMove(column, mostLowRow, player))
-			{
-				model.updateListenersBoardCase(column, mostLowRow, player);
-				model.makeNextPlayerCurrent();
-				model.updateListenersCurrentPlayer();
-				
-				return MyServer.MOVE_DONE;
-			}
-			if(model.positionMakeWinning(column, mostLowRow))
-			{
-				return MyServer.YOU_WON;
-			}
+			return Status.NO_AVAILABLE_POSITION;
 		}
-		return MyServer.NO_AVAILABLE_POSITION;
+		
+		if(model.makeMove(column, mostLowRow, player))
+		{
+			model.updateListenersBoardCase(column, mostLowRow, player);
+			
+			model.makeNextPlayerCurrent();
+			model.updateListenersCurrentPlayer();
+			
+			return Status.OPERATION_DONE;
+		}
+		
+		if(model.positionMakeWinning(column, mostLowRow))
+		{
+			return Status.YOU_WON;
+		}
+		
+		return Status.UNKNOWN;
 	}
 
 	private void initializeGame()

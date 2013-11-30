@@ -45,14 +45,14 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public String addModelListener(String username, IModelListener modelListener)
+	public String addModelListener(String username, IModelListener client)
 	{
 		if(viewsListeners.containsKey(username))
 		{
 			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
 		addNewPlayer(username);
-		viewsListeners.put(username, modelListener);
+		viewsListeners.put(username, client);
 		printListOfUsernamesInList("New player added. ");
 		return username;
 	}
@@ -65,14 +65,26 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void initializeListenerBoard(IModelListener listener) 
+	public void initializeListenerBoard(IModelListener client) 
 	{
 		System.out.println("Starting thread to init board.");
 		ExecutorService executor = Executors.newFixedThreadPool(1);
-		Runnable task = new InitializeListenerBoard(listener, columns.get(), rows.get());
+		Runnable task = new InitializeListenerBoard(client, columns.get(), rows.get());
 		executor.execute(task);
 		executor.shutdown();
 	    System.out.println("Board initialized");
+	}
+	
+	@Override
+	public void updateUsername(String username, IModelListener client)
+	{
+		Runnable task;
+		System.out.println("Updating username.");
+		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
+		task = new UpdateListenerUsername(client, username);
+		executor.execute(task);
+		executor.shutdown();
+	    System.out.println("Usernames updated.");
 	}
 	
 	@Override
@@ -87,7 +99,7 @@ public class Model implements IModel
 			executor.execute(task);
 		}
 		executor.shutdown();
-	    System.out.println("Finished all threads.");
+	    System.out.println("Current player updated.");
 	}
 	
 	@Override
@@ -424,6 +436,32 @@ public class Model implements IModel
 		  }
 	}
 	
+	private class UpdateListenerUsername implements Runnable 
+	{
+		  private IModelListener listener;
+		  private String username;
+		  
+		  UpdateListenerUsername(IModelListener listener, String username) 
+		  {
+			  this.listener = listener;
+			  this.username = username;
+		  }
+
+		  @Override
+		  public void run() 
+		  {
+			  try 
+			  {
+				Thread.sleep(250);
+			  } 
+			  catch (InterruptedException e)
+			  {
+				e.printStackTrace();
+			  }
+			  listener.updateUsername(username);
+		  }
+	}
+	
 	private class UpdateListenerCurrentPlayer implements Runnable 
 	{
 		  private IModelListener listener;
@@ -440,7 +478,7 @@ public class Model implements IModel
 		  {
 			  try 
 			  {
-				Thread.sleep(100);
+				Thread.sleep(200);
 			  } 
 			  catch (InterruptedException e)
 			  {
@@ -471,7 +509,7 @@ public class Model implements IModel
 		  {
 			  try 
 			  {
-				Thread.sleep(100);
+				Thread.sleep(300);
 			  } 
 			  catch (InterruptedException e)
 			  {

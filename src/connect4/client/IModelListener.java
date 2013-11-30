@@ -8,4 +8,5 @@ public interface IModelListener
 	void updateCurrentPlayer(String player);
 	void updateListenerNotAvailableUsername(String username);
 	void updateCase(int column, int row, CaseType caseType);
+	void updateUsername(String username);
 }

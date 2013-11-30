@@ -1,9 +1,8 @@
 package connect4.client;
 
 import java.io.IOException;
-
 import connect4.server.IMyServer;
-import connect4.server.MyServer;
+import connect4.server.Status;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
@@ -14,13 +13,16 @@ import net.sf.lipermi.net.Client;
  */
 public class ClientController
 {
-	Client client;
-	IMyServer myRemoteObject;
-	CallHandler callHandler;
+	private Client client;
+	private IMyServer myRemoteObject;
+	private CallHandler callHandler;
 	
-	String serverIP;
-	int serverPort;
-	IModelListener view;
+	private String serverIP;
+	private int serverPort;
+	// used to give to server
+	private IModelListener modelListener;
+	// used to talk to the view
+	private IU userInterface;
 	
 	String username;
 	
@@ -31,7 +33,13 @@ public class ClientController
 		username = "MadJack";
 		
 		makeCustomView();
-		startClient();
+		
+		// Testing
+		modelListener.initializeView(7, 6);
+		modelListener.updateUsername("Username");
+		modelListener.updateCurrentPlayer("Current");
+		
+		//startClient();
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -47,11 +55,11 @@ public class ClientController
 	public void makeMove(final int row, final int column)
 	{
 		System.out.println("Starting move from client");
-		String serverResponse = myRemoteObject.makeMove(column, row, username);
-		System.out.println(serverResponse);
+		// TODO ask tiger weird error: do many returns.
+		handleServerResponse(myRemoteObject.makeMove(column, row, username));
 	}
 	
-	public void updateNotAvailableUsername(String username)
+	public void updateUsername(String username)
 	{
 		this.username = username;
 	}
@@ -71,7 +79,8 @@ public class ClientController
 	
 	private void makeCustomView()
 	{
-		view = new View(this);
+		userInterface = new View(this);
+		modelListener = (IModelListener) userInterface;
 	}
 	
 	private void startClient()
@@ -95,19 +104,20 @@ public class ClientController
 	{
 		try 
 		{
-			callHandler.registerGlobal(IModelListener.class, view);
+			callHandler.registerGlobal(IModelListener.class, modelListener);
 		}
 		catch (LipeRMIException e) 
 		{
 			e.printStackTrace();
 		}
-		System.out.println("Registering listener");
-		String serverResponse = myRemoteObject.registerListener(username, view);
-		System.out.println(serverResponse);
-		
-		if(serverResponse.equals(MyServer.GAME_FULL))
+		handleServerResponse(myRemoteObject.registerListener(username, modelListener));
+	}
+	
+	private void handleServerResponse(Status serverResponse)
+	{
+		if(!serverResponse.equals(Status.OPERATION_DONE))
 		{
-			quitTheGame();
+			userInterface.alertMessage(serverResponse.getDescription());
 		}
 	}
 	

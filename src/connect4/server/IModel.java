@@ -5,12 +5,13 @@ import connect4.client.IModelListener;
 // used by server
 public interface IModel 
 {
-	String addModelListener(String player, IModelListener modelListener);
+	String addModelListener(String player, IModelListener client);
 	void removeModelListener(String player);
 	
-	void initializeListenerBoard(IModelListener listener);
+	void initializeListenerBoard(IModelListener client);
 	void updateListenersCurrentPlayer();
 	void updateListenersBoardCase(int column, int row, String player);
+	void updateUsername(String username, IModelListener client);
 	
 	void makeNewBoard();
 	boolean makeMove(int column, int row, String player);

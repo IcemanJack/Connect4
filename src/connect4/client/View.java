@@ -26,7 +26,7 @@ import javax.swing.JPanel;
 
 import connect4.server.CaseType;
 
-public class View implements IModelListener
+public class View implements IU, IModelListener
 {
 	private BufferedImage redTokenImage;
 	private BufferedImage blackTokenImage;
@@ -41,9 +41,8 @@ public class View implements IModelListener
 	private int floorColumns;
 	private ClientController controller;
 	
-	public View( ClientController controller)
+	public View(ClientController controller)
 	{
-		// INIT
 		this.controller = controller;
 		
 		mainFrame = new JFrame();
@@ -57,7 +56,6 @@ public class View implements IModelListener
 	
 	public void makeNewPlayground()
 	{
-		// INIT
 		if(playgroundPanel != null)
 		{
 			mainFrame.getContentPane().remove(playgroundPanel);
@@ -122,7 +120,6 @@ public class View implements IModelListener
 	@Override
 	public void updateCurrentPlayer(String player) 
 	{
-		System.out.println("Updating current player");
 		getMainPanel().remove(playerTurnLabel);
 		playerTurnLabel = new JLabel(player + " turn!");
 		getMainPanel().add(playerTurnLabel);
@@ -131,9 +128,19 @@ public class View implements IModelListener
 	}
 	
 	@Override
+	public void updateUsername(String player) 
+	{
+		getMainPanel().remove(playerTurnLabel);
+		playerTurnLabel = new JLabel("Playing as " + player);
+		getMainPanel().add(playerTurnLabel);
+		mainFrame.pack();
+		mainFrame.repaint();
+	}
+	
+	@Override
 	public void updateListenerNotAvailableUsername(String username)
 	{
-		controller.updateNotAvailableUsername(username);
+		controller.updateUsername(username);
 	}
 	
 	private BufferedImage getCaseImage(CaseType caseType)
@@ -259,8 +266,9 @@ public class View implements IModelListener
 		}
 
 		@Override
-		public void windowClosed(WindowEvent arg0) {
-			// TODO Auto-generated method stub
+		public void windowClosed(WindowEvent arg0)
+		{
+			controller.quitTheGame();
 		}
 
 		@Override
@@ -293,4 +301,10 @@ public class View implements IModelListener
 			
 		}
 	};
+
+	@Override
+	public void alertMessage(String message) 
+	{
+		JOptionPane.showMessageDialog(null, message);
+	}
 }
