@@ -34,7 +34,8 @@ public class View implements IU, IModelListener
 	
 	private JFrame mainFrame;
 	private JPanel mainPanel;
-	private JLabel playerTurnLabel;
+	private JLabel usernameLabel;
+	private JLabel currentPlayerLabel;
 	private JPanel playgroundPanel;
 	
 	private int floorRows;
@@ -48,13 +49,37 @@ public class View implements IU, IModelListener
 		mainFrame = new JFrame();
 		mainFrame.addWindowListener(windowListener);
 		
-		mainPanel = new JPanel(new GridLayout(2, 1));
+		mainPanel = new JPanel(new GridLayout(3, 1));
 		mainPanel.setName("MainPanel");
 		
 		loadTokenImages();
 	}
 	
-	public void makeNewPlayground()
+	@Override
+	public void initializeView(int floorColumns, int floorRows) 
+	{
+		System.out.println("Initialzing view");
+		this.floorColumns = floorColumns;
+		this.floorRows = floorRows;
+		
+		makeMenuBar();
+		
+		currentPlayerLabel = new JLabel();
+		usernameLabel = new JLabel();
+		mainPanel.add(usernameLabel);
+		mainPanel.add(currentPlayerLabel);
+		
+		mainFrame.getContentPane().add(mainPanel);
+		makeNewPlayground();
+		
+		mainFrame.pack();
+		mainFrame.setResizable(false);
+		mainFrame.setLocationRelativeTo(null);
+		mainFrame.setVisible(true);
+		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	private void makeNewPlayground()
 	{
 		if(playgroundPanel != null)
 		{
@@ -78,6 +103,7 @@ public class View implements IU, IModelListener
 		mainFrame.pack();
 		mainPanel.repaint();
 	}
+	
 	@Override
 	public void updateCase(int column, int row, CaseType caseType)
 	{
@@ -92,47 +118,23 @@ public class View implements IU, IModelListener
 		mainFrame.repaint();
 	}
 	
-	public int endGameChoiceDialog(String message, String title)
-	{
-		return JOptionPane.showConfirmDialog(mainFrame, message, title, JOptionPane.YES_NO_OPTION);
-	}
-	
 	@Override
-	public void initializeView( int floorColumns, int floorRows) 
+	public void updateCurrentPlayer(String username) 
 	{
-		System.out.println("Initialzing view");
-		this.floorColumns = floorColumns;
-		this.floorRows = floorRows;
-		playerTurnLabel = new JLabel();
-
-		makeMenuBar();
-		mainPanel.add(playerTurnLabel);
-		mainFrame.getContentPane().add(mainPanel);
-		makeNewPlayground();
-		
-	  mainFrame.pack();
-		mainFrame.setResizable(false);
-		mainFrame.setLocationRelativeTo(null);
-		mainFrame.setVisible(true);
-		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	}
-	
-	@Override
-	public void updateCurrentPlayer(String player) 
-	{
-		getMainPanel().remove(playerTurnLabel);
-		playerTurnLabel = new JLabel(player + " turn!");
-		getMainPanel().add(playerTurnLabel);
+		getMainPanel().remove(currentPlayerLabel);
+		currentPlayerLabel = new JLabel("Current: " + username);
+		getMainPanel().add(currentPlayerLabel);
 		mainFrame.pack();
 		mainFrame.repaint();
 	}
 	
 	@Override
-	public void updateUsername(String player) 
+	public void updateUsername(String username) 
 	{
-		getMainPanel().remove(playerTurnLabel);
-		playerTurnLabel = new JLabel("Playing as " + player);
-		getMainPanel().add(playerTurnLabel);
+		controller.updateUsername(username);
+		getMainPanel().remove(usernameLabel);
+		usernameLabel = new JLabel("Username: " + username);
+		getMainPanel().add(usernameLabel);
 		mainFrame.pack();
 		mainFrame.repaint();
 	}
@@ -141,6 +143,42 @@ public class View implements IU, IModelListener
 	public void updateListenerNotAvailableUsername(String username)
 	{
 		controller.updateUsername(username);
+	}
+	
+	@Override
+	public void updateEndOfTheGame(String winner)
+	{
+		int choice = 0;
+		if(!winner.equals(controller.getUsername()))
+		{
+			// 0 = yes / 1 = no
+			choice = endGameChoiceDialog(winner + " won!",
+					"Would you like to stay in the game?\n" +
+					"Reminder: All spectators are in queue to become the next happy player!");
+			if(choice == 1)
+			{
+				controller.quitTheGame();
+			}
+		}
+		if(choice == 1)
+		{
+			controller.quitTheGame();
+		}
+		else
+		{
+			makeNewPlayground();
+		}
+	}
+
+	@Override
+	public void alertMessage(String message) 
+	{
+		JOptionPane.showMessageDialog(null, message);
+	}
+	
+	public int endGameChoiceDialog(String title, String message)
+	{
+		return JOptionPane.showConfirmDialog(mainFrame, message, title, JOptionPane.YES_NO_OPTION);
 	}
 	
 	private BufferedImage getCaseImage(CaseType caseType)
@@ -301,10 +339,4 @@ public class View implements IU, IModelListener
 			
 		}
 	};
-
-	@Override
-	public void alertMessage(String message) 
-	{
-		JOptionPane.showMessageDialog(null, message);
-	}
 }

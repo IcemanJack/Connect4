@@ -45,7 +45,7 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public String addModelListener(String username, IModelListener client)
+	public String addClient(String username, IModelListener client)
 	{
 		if(viewsListeners.containsKey(username))
 		{
@@ -53,45 +53,49 @@ public class Model implements IModel
 		}
 		addNewPlayer(username);
 		viewsListeners.put(username, client);
-		printListOfUsernamesInList("New player added. ");
+		printListOfUsernamesInList("New player added. New list ");
 		return username;
 	}
 	@Override
-	public void removeModelListener(String username) 
+	public void removeClient(String username) 
 	{
 		removePlayer(username);
 		viewsListeners.remove(username);
-		printListOfUsernamesInList("Player removed. ");
+		printListOfUsernamesInList("Player removed. New list ");
 	}
 	
 	@Override
-	public void initializeListenerBoard(IModelListener client) 
+	public void initializeClientBoard(IModelListener client) 
 	{
-		System.out.println("Starting thread to init board.");
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		Runnable task = new InitializeListenerBoard(client, columns.get(), rows.get());
 		executor.execute(task);
 		executor.shutdown();
-	    System.out.println("Board initialized");
 	}
 	
 	@Override
-	public void updateUsername(String username, IModelListener client)
+	public void initializeClientsBoard()
+	{
+		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		{
+			initializeClientBoard(entry.getValue());
+		} 
+	}
+	
+	@Override
+	public void updateClientUsername(String username, IModelListener client)
 	{
 		Runnable task;
-		System.out.println("Updating username.");
 		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
 		task = new UpdateListenerUsername(client, username);
 		executor.execute(task);
 		executor.shutdown();
-	    System.out.println("Usernames updated.");
 	}
 	
 	@Override
-	public void updateListenersCurrentPlayer() 
+	public void updateClientsCurrentPlayer() 
 	{
 		Runnable task;
-		System.out.println("Updating current player.");
 		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
 		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
 		{
@@ -99,14 +103,12 @@ public class Model implements IModel
 			executor.execute(task);
 		}
 		executor.shutdown();
-	    System.out.println("Current player updated.");
 	}
 	
 	@Override
-	public void updateListenersBoardCase(int column, int row, String player)
+	public void updateClientBoardCase(int column, int row, String player)
 	{
 		Runnable task;
-		System.out.println("Updating board case.");
 		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
 		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
 		{
@@ -120,7 +122,19 @@ public class Model implements IModel
 			executor.execute(task);
 		}
 		executor.shutdown();
-	    System.out.println("Finished all threads.");
+	}
+	
+	@Override
+	public void notifyOfEndOfTheGame()
+	{
+		Runnable task;
+		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
+		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		{
+			task = new UpdateEndOfTheGame(entry.getValue(), currentPlayer);
+			executor.execute(task);
+		}
+		executor.shutdown();
 	}
 	
 	@Override
@@ -148,6 +162,7 @@ public class Model implements IModel
 		board[column][row] = getPlayerCaseType(player);
 		return true;
 	}
+	
 	@Override
 	public void movePlayerToPosition(int column, int row, String player)
 	{
@@ -157,7 +172,6 @@ public class Model implements IModel
 		}
 		catch(ArrayIndexOutOfBoundsException e){}
 	}
-	
 	
 	@Override
 	public boolean playerIsLoggedIn(String player)
@@ -181,6 +195,7 @@ public class Model implements IModel
 			currentPlayer = player1;
 		}
 	}
+	
 	@Override
 	public void setCurrentPlayer(String player)
 	{
@@ -516,6 +531,32 @@ public class Model implements IModel
 				e.printStackTrace();
 			  }
 			  listener.updateCase(column, row, caseType);
+		  }
+	}
+	
+	private class UpdateEndOfTheGame implements Runnable 
+	{
+		  private IModelListener listener;
+		  private String winner;
+		  
+		  public UpdateEndOfTheGame(IModelListener listener, String winner) 
+		  {
+			  this.listener = listener;
+			  this.winner = winner;
+		  }
+
+		  @Override
+		  public void run() 
+		  {
+			  try 
+			  {
+				Thread.sleep(600);
+			  } 
+			  catch (InterruptedException e)
+			  {
+				e.printStackTrace();
+			  }
+			  listener.updateEndOfTheGame(winner);
 		  }
 	}
 }

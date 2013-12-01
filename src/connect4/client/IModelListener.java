@@ -9,4 +9,6 @@ public interface IModelListener
 	void updateListenerNotAvailableUsername(String username);
 	void updateCase(int column, int row, CaseType caseType);
 	void updateUsername(String username);
+	void updateEndOfTheGame(String winner);
+	// if full make, you are a spectator notification
 }

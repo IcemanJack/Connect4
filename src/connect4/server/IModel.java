@@ -5,13 +5,16 @@ import connect4.client.IModelListener;
 // used by server
 public interface IModel 
 {
-	String addModelListener(String player, IModelListener client);
-	void removeModelListener(String player);
+	String addClient(String player, IModelListener client);
+	void removeClient(String player);
 	
-	void initializeListenerBoard(IModelListener client);
-	void updateListenersCurrentPlayer();
-	void updateListenersBoardCase(int column, int row, String player);
-	void updateUsername(String username, IModelListener client);
+	// too many similar private classes?
+	void initializeClientBoard(IModelListener client);
+	void updateClientsCurrentPlayer();
+	void updateClientBoardCase(int column, int row, String player);
+	void updateClientUsername(String username, IModelListener client);
+	void notifyOfEndOfTheGame();
+	void initializeClientsBoard();
 	
 	void makeNewBoard();
 	boolean makeMove(int column, int row, String player);

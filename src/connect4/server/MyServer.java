@@ -41,21 +41,21 @@ public class MyServer extends Server implements IMyServer
 		{
 			return Status.GAME_FULL;
 		}
-		// will return incremented one if used
-		username = model.addModelListener(username, client);
-		model.initializeListenerBoard(client);
-		model.updateUsername(username, client);
+		// will return incremented one if already in use
+		username = model.addClient(username, client);
+		model.initializeClientBoard(client);
+		model.updateClientUsername(username, client);
 		
-		// last player starts.
+		// last player starts
 		model.setCurrentPlayer(username);
-		model.updateListenersCurrentPlayer();
+		model.updateClientsCurrentPlayer();
 		
 		return Status.OPERATION_DONE;
 	}
 	@Override
 	public synchronized void unregisterListener(String username) 
 	{
-		model.removeModelListener(username);
+		model.removeClient(username);
 	}
 	
 	@Override
@@ -83,23 +83,27 @@ public class MyServer extends Server implements IMyServer
 		{
 			return Status.NO_AVAILABLE_POSITION;
 		}
-		
-		if(model.makeMove(column, mostLowRow, player))
+		else if(!model.makeMove(column, mostLowRow, player))
 		{
-			model.updateListenersBoardCase(column, mostLowRow, player);
-			
-			model.makeNextPlayerCurrent();
-			model.updateListenersCurrentPlayer();
-			
-			return Status.OPERATION_DONE;
+			return Status.UNKNOWN;
 		}
+		
+		model.updateClientBoardCase(column, mostLowRow, player);
 		
 		if(model.positionMakeWinning(column, mostLowRow))
 		{
+			// will make a new board
+			model.notifyOfEndOfTheGame();
+			model.makeNewBoard();
+			// TODO who's turn?
+			// first spectator
 			return Status.YOU_WON;
 		}
 		
-		return Status.UNKNOWN;
+		model.makeNextPlayerCurrent();
+		model.updateClientsCurrentPlayer();
+		
+		return Status.OPERATION_DONE;
 	}
 
 	private void initializeGame()

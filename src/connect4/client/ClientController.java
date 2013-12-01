@@ -33,13 +33,17 @@ public class ClientController
 		username = "MadJack";
 		
 		makeCustomView();
+		startClient();
 		
 		// Testing
-		modelListener.initializeView(7, 6);
-		modelListener.updateUsername("Username");
-		modelListener.updateCurrentPlayer("Current");
-		
-		//startClient();
+//		modelListener.initializeView(7, 6);
+//		modelListener.updateEndOfTheGame("fddf");
+//		modelListener.updateUsername("Username");
+//		modelListener.updateCurrentPlayer("Current");
+		//modelListener.updateEndOfTheGame("Cheval");
+		//modelListener.initializeView(7, 6);
+//		System.out.println(((View) userInterface).endGameChoiceDialog("","sdsds\nsdsd"));
+
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -67,7 +71,6 @@ public class ClientController
 	/* TODO 
 	 * Must be called if
 	 * 	Client closes windows
-	 * 	Client click exit
 	 * 	Client stops the application
 	 * 	Client kills the process
 	 */
@@ -75,6 +78,11 @@ public class ClientController
 	{
 		disconnectClient();
 		System.exit(0);
+	}
+	
+	public String getUsername()
+	{
+		return username;
 	}
 	
 	private void makeCustomView()
@@ -85,7 +93,6 @@ public class ClientController
 	
 	private void startClient()
 	{
-		System.out.println("Client is starting...");
 		callHandler = new CallHandler();
 		try 
 		{
@@ -96,7 +103,6 @@ public class ClientController
 		{
 			e.printStackTrace();
 		}
-		System.out.println("Client started");
 		registerAtServer();
 	}
 	
@@ -123,7 +129,6 @@ public class ClientController
 	
 	private void disconnectClient()
 	{
-		System.out.println("****! Disconnection client...");
 		myRemoteObject.unregisterListener(username);
 		try 
 		{
@@ -133,6 +138,5 @@ public class ClientController
 		{
 			e.printStackTrace();
 		}
-		System.out.println("Client disconnected");
 	}
 }
