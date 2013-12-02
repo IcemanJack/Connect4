@@ -41,6 +41,7 @@ public class MyServer extends Server implements IMyServer
 		{
 			return Status.GAME_FULL;
 		}
+		
 		// will return incremented one if already in use
 		username = model.addClient(username, client);
 		model.initializeClientBoard(client);
@@ -56,12 +57,16 @@ public class MyServer extends Server implements IMyServer
 	public synchronized void unregisterListener(String username) 
 	{
 		model.removeClient(username);
+		if(model.isPlaying(username))
+		{
+			// notify he left
+		}
 	}
 	
 	@Override
 	public synchronized Status makeMove(int column, int row, String player)
 	{
-		if(!model.playerIsLoggedIn(player))
+		if(!model.isPlaying(player))
 		{
 			return Status.USER_NOT_PLAYING;
 		}
@@ -88,7 +93,7 @@ public class MyServer extends Server implements IMyServer
 			return Status.UNKNOWN;
 		}
 		
-		model.updateClientBoardCase(column, mostLowRow, player);
+		model.updateClientsBoardCase(column, mostLowRow, player);
 		
 		if(model.positionMakeWinning(column, mostLowRow))
 		{

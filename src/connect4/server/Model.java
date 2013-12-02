@@ -1,26 +1,24 @@
 package connect4.server;
 
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import connect4.client.IModelListener;
 import connect4.server.CaseType;
+import connect4.server.User.UserType;
 
 /* TODO
  * change all return null
  * throw custom exceptions, in server catch them
  * call super to get data from private classes
- * put finals everywhere
+ * put finals WHERE YOU WISH.. needed.
  */
 
 public class Model implements IModel
 {
-	// UserName, Listener
-	private Map<String, IModelListener> viewsListeners = new TreeMap<String, IModelListener>();
-
+	private LinkedList<User> users = new LinkedList<User>();
 	private CaseType[][] board;
 	
 	private AtomicInteger columns = new AtomicInteger();
@@ -47,20 +45,31 @@ public class Model implements IModel
 	@Override
 	public String addClient(String username, IModelListener client)
 	{
-		if(viewsListeners.containsKey(username))
+		if(containsUserName(username))
 		{
 			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
-		addNewPlayer(username);
-		viewsListeners.put(username, client);
+		UserType type = null;
+		if(playerAvailable())
+		{
+			addNewPlayer(username);
+			type = UserType.PLAYER;
+		}
+		else
+		{
+			type = UserType.SPECTATOR;
+		}
+		users.add(new User(username, client, type));
 		printListOfUsernamesInList("New player added. New list ");
+		
 		return username;
 	}
+	
 	@Override
 	public void removeClient(String username) 
 	{
 		removePlayer(username);
-		viewsListeners.remove(username);
+		users.remove(username);
 		printListOfUsernamesInList("Player removed. New list ");
 	}
 	
@@ -76,9 +85,9 @@ public class Model implements IModel
 	@Override
 	public void initializeClientsBoard()
 	{
-		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		for(User user: users)
 		{
-			initializeClientBoard(entry.getValue());
+			initializeClientBoard(user.getListener());
 		} 
 	}
 	
@@ -86,7 +95,7 @@ public class Model implements IModel
 	public void updateClientUsername(String username, IModelListener client)
 	{
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
+		ExecutorService executor = Executors.newFixedThreadPool(1); // TODO NOT SURE, refactoring
 		task = new UpdateListenerUsername(client, username);
 		executor.execute(task);
 		executor.shutdown();
@@ -96,28 +105,29 @@ public class Model implements IModel
 	public void updateClientsCurrentPlayer() 
 	{
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
-		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		ExecutorService executor = Executors.newFixedThreadPool(users.size());
+		for(User user: users)
 		{
-			task = new UpdateListenerCurrentPlayer(entry.getValue(), currentPlayer);
+			task = new UpdateListenerCurrentPlayer(user.getListener(), currentPlayer);
 			executor.execute(task);
 		}
 		executor.shutdown();
 	}
 	
 	@Override
-	public void updateClientBoardCase(int column, int row, String player)
+	public void updateClientsBoardCase(int column, int row, String player)
 	{
+		CaseType caseType = getPlayerCaseType(player);
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
-		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		ExecutorService executor = Executors.newFixedThreadPool(users.size());
+		for(User user: users)
 		{
 			task = new UpdateListenerBoardCase
 					(
-							entry.getValue(),
+							user.getListener(),
 							column,
 							row,
-							getPlayerCaseType(player)
+							caseType
 					);
 			executor.execute(task);
 		}
@@ -128,10 +138,10 @@ public class Model implements IModel
 	public void notifyOfEndOfTheGame()
 	{
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(viewsListeners.size());
-		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		ExecutorService executor = Executors.newFixedThreadPool(users.size());
+		for(User user: users)
 		{
-			task = new UpdateEndOfTheGame(entry.getValue(), currentPlayer);
+			task = new UpdateEndOfTheGame(user.getListener(), currentPlayer);
 			executor.execute(task);
 		}
 		executor.shutdown();
@@ -174,7 +184,7 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public boolean playerIsLoggedIn(String player)
+	public boolean isPlaying(String player)
 	{
 		if((player.equals(player1)) || (player.equals(player2)))
 		{
@@ -207,7 +217,6 @@ public class Model implements IModel
 	{
 		return currentPlayer;
 	}
-	
 	
 	@Override
 	public String getNextPlayer()
@@ -323,9 +332,9 @@ public class Model implements IModel
 	private void printListOfUsernamesInList(String header)
 	{
 		String output = header + " Usernames: [";
-		for(Map.Entry<String,IModelListener> entry : viewsListeners.entrySet())
+		for(User user: users)
 		{
-			output += entry.getKey() + ",";
+			output += user.getName() + ",";
 		}
 		if (output.endsWith(","))
 		{
@@ -413,13 +422,25 @@ public class Model implements IModel
 	
 	private String getNextAvailableUsername(String username, String newUsername, int counter)
 	{
-		if(viewsListeners.containsKey(newUsername))
+		if(containsUserName(newUsername))
 		{
 			counter++;
 			newUsername = username.concat(String.valueOf(counter));
 			getNextAvailableUsername(username, newUsername, counter);
 		}
 		return newUsername;
+	}
+	
+	private boolean containsUserName(String name)
+	{
+		for(User user: users)
+		{
+			if(user.getName().equals(name))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private class InitializeListenerBoard implements Runnable 

@@ -11,7 +11,7 @@ public interface IModel
 	// too many similar private classes?
 	void initializeClientBoard(IModelListener client);
 	void updateClientsCurrentPlayer();
-	void updateClientBoardCase(int column, int row, String player);
+	void updateClientsBoardCase(int column, int row, String player);
 	void updateClientUsername(String username, IModelListener client);
 	void notifyOfEndOfTheGame();
 	void initializeClientsBoard();
@@ -22,7 +22,7 @@ public interface IModel
 	
 	void makeNextPlayerCurrent();
 	void setCurrentPlayer(String player);
-	boolean playerIsLoggedIn(String player);
+	boolean isPlaying(String player);
 	
 	String getCurrentPlayer();
 	String getNextPlayer();
