@@ -121,9 +121,9 @@ public class View implements IU, IModelListener
 	@Override
 	public void updateCurrentPlayer(String username) 
 	{
-		getMainPanel().remove(currentPlayerLabel);
-		currentPlayerLabel = new JLabel("Current: " + username);
-		getMainPanel().add(currentPlayerLabel);
+		mainPanel.remove(currentPlayerLabel);
+		currentPlayerLabel = new JLabel("Now playing: " + username);
+		mainPanel.add(currentPlayerLabel);
 		mainFrame.pack();
 		mainFrame.repaint();
 	}
@@ -132,9 +132,17 @@ public class View implements IU, IModelListener
 	public void updateUsername(String username) 
 	{
 		controller.updateUsername(username);
-		getMainPanel().remove(usernameLabel);
-		usernameLabel = new JLabel("Username: " + username);
-		getMainPanel().add(usernameLabel);
+		try
+		{
+			mainPanel.remove(usernameLabel);
+			usernameLabel = new JLabel("My username: " + username);
+			mainPanel.add(usernameLabel);
+		}
+		catch(NullPointerException e)
+		{
+			alertMessage("Can't update username..\n" +
+					"The interface isn't created yet.");
+		}
 		mainFrame.pack();
 		mainFrame.repaint();
 	}
@@ -148,26 +156,16 @@ public class View implements IU, IModelListener
 	@Override
 	public void updateEndOfTheGame(String winner)
 	{
-		int choice = 0;
+		String message = winner + " won the game!";
+		if(winner.isEmpty())
+		{
+			message = "It's a null..\nToo strong and furious, like a TIGER.";
+		}
 		if(!winner.equals(controller.getUsername()))
 		{
-			// 0 = yes / 1 = no
-			choice = endGameChoiceDialog(winner + " won!",
-					"Would you like to stay in the game?\n" +
-					"Reminder: All spectators are in queue to become the next happy player!");
-			if(choice == 1)
-			{
-				controller.quitTheGame();
-			}
+			alertMessage(message);
 		}
-		if(choice == 1)
-		{
-			controller.quitTheGame();
-		}
-		else
-		{
-			makeNewPlayground();
-		}
+		controller.quitTheGame();
 	}
 
 	@Override
@@ -175,8 +173,10 @@ public class View implements IU, IModelListener
 	{
 		JOptionPane.showMessageDialog(null, message);
 	}
-	
-	public int endGameChoiceDialog(String title, String message)
+
+	@Override
+	// @return 0 = yes | 1 = no | -1 = exit
+	public int choiceDialog(String title, String message)
 	{
 		return JOptionPane.showConfirmDialog(mainFrame, message, title, JOptionPane.YES_NO_OPTION);
 	}
@@ -206,11 +206,6 @@ public class View implements IU, IModelListener
 	  fileMenu.add(quitSubMenu);
 	  menuBar.add(fileMenu);
 	  mainPanel.add(menuBar);
-	}
-	
-	private JPanel getMainPanel()
-	{
-		return (JPanel) mainFrame.getContentPane().getComponents()[0];
 	}
 
 	private int[] getClickedImageLabel( JLabel imageLabel)

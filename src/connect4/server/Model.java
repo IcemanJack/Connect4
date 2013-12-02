@@ -59,6 +59,7 @@ public class Model implements IModel
 		{
 			type = UserType.SPECTATOR;
 		}
+		System.out.println("In addClient:\nplayer "+ username +"\nplayer1: "+ player1 +"\nplayer2: "+player2);
 		users.add(new User(username, client, type));
 		printListOfUsernamesInList("New player added. New list ");
 		
@@ -69,7 +70,15 @@ public class Model implements IModel
 	public void removeClient(String username) 
 	{
 		removePlayer(username);
-		users.remove(username);
+		User client = null;
+		for(User user: users)
+		{
+			if(user.getName().equals(username))
+			{
+				client = user;
+			}
+		}
+		users.remove(client);
 		printListOfUsernamesInList("Player removed. New list ");
 	}
 	
@@ -135,13 +144,19 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void notifyOfEndOfTheGame()
+	public void notifyOfEndOfTheGame(boolean isNull)
 	{
+		System.out.println("NOTIFYYINH NIGGGA" + currentPlayer + " "+ isNull);
+		String winner = "";
+		if(!isNull)
+		{
+			winner = currentPlayer;
+		}
 		Runnable task;
 		ExecutorService executor = Executors.newFixedThreadPool(users.size());
 		for(User user: users)
 		{
-			task = new UpdateEndOfTheGame(user.getListener(), currentPlayer);
+			task = new UpdateEndOfTheGame(user.getListener(), winner);
 			executor.execute(task);
 		}
 		executor.shutdown();
@@ -186,6 +201,7 @@ public class Model implements IModel
 	@Override
 	public boolean isPlaying(String player)
 	{
+		System.out.println("In isPlaying:\nplayer "+ player +"\nplayer1: "+ player1 +"\nplayer2: "+player2);
 		if((player.equals(player1)) || (player.equals(player2)))
 		{
 			return true;
@@ -279,6 +295,18 @@ public class Model implements IModel
 		if(board[column][row] == CaseType.NONE)
 		{
 			return true;
+		}
+		return false;
+	}
+	
+	private boolean containsUserName(String username)
+	{
+		for(User user: users)
+		{
+			if(user.getName().equals(username))
+			{
+				return true;
+			}
 		}
 		return false;
 	}
@@ -431,18 +459,6 @@ public class Model implements IModel
 		return newUsername;
 	}
 	
-	private boolean containsUserName(String name)
-	{
-		for(User user: users)
-		{
-			if(user.getName().equals(name))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	
 	private class InitializeListenerBoard implements Runnable 
 	{
 		  private IModelListener listener;
@@ -571,13 +587,23 @@ public class Model implements IModel
 		  {
 			  try 
 			  {
-				Thread.sleep(600);
+				Thread.sleep(100);
 			  } 
 			  catch (InterruptedException e)
 			  {
 				e.printStackTrace();
 			  }
-			  listener.updateEndOfTheGame(winner);
+			  try
+			  {
+				  listener.updateEndOfTheGame(winner);
+			  }
+			  catch(Exception e)
+			  {
+				  /* TODO Arrange
+				   * Cause: this thread is updating after
+				   * the client was remove from the users
+				   */
+			  }
 		  }
 	}
 }

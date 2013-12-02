@@ -13,10 +13,10 @@ public interface IModel
 	void updateClientsCurrentPlayer();
 	void updateClientsBoardCase(int column, int row, String player);
 	void updateClientUsername(String username, IModelListener client);
-	void notifyOfEndOfTheGame();
+	void notifyOfEndOfTheGame(boolean isNull);
 	void initializeClientsBoard();
 	
-	void makeNewBoard();
+	void makeNewBoard(); // if many games
 	boolean makeMove(int column, int row, String player);
 	void movePlayerToPosition(int column, int row, String player);
 	

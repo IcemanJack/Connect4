@@ -3,6 +3,7 @@ package connect4.client;
 import java.io.IOException;
 import connect4.server.IMyServer;
 import connect4.server.Status;
+import connect4.server.User.UserType;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
@@ -14,14 +15,12 @@ import net.sf.lipermi.net.Client;
 public class ClientController
 {
 	private Client client;
-	private IMyServer myRemoteObject;
+	private IMyServer server;
 	private CallHandler callHandler;
 	
 	private String serverIP;
 	private int serverPort;
-	// used to give to server
-	private IModelListener modelListener;
-	// used to talk to the view
+	private IModelListener myListener;
 	private IU userInterface;
 	
 	String username;
@@ -34,16 +33,6 @@ public class ClientController
 		
 		makeCustomView();
 		startClient();
-		
-		// Testing
-//		modelListener.initializeView(7, 6);
-//		modelListener.updateEndOfTheGame("fddf");
-//		modelListener.updateUsername("Username");
-//		modelListener.updateCurrentPlayer("Current");
-		//modelListener.updateEndOfTheGame("Cheval");
-		//modelListener.initializeView(7, 6);
-//		System.out.println(((View) userInterface).endGameChoiceDialog("","sdsds\nsdsd"));
-
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -58,9 +47,7 @@ public class ClientController
 	
 	public void makeMove(final int row, final int column)
 	{
-		System.out.println("Starting move from client");
-		// TODO ask tiger weird error: do many returns.
-		handleServerResponse(myRemoteObject.makeMove(column, row, username));
+		handleServerResponse(server.makeMove(column, row, username));
 	}
 	
 	public void updateUsername(String username)
@@ -69,13 +56,14 @@ public class ClientController
 	}
 	
 	/* TODO 
-	 * Must be called if
-	 * 	Client closes windows
+	 * Must be called if:
 	 * 	Client stops the application
 	 * 	Client kills the process
 	 */
 	public void quitTheGame()
 	{
+		// TODO ask Tiger:
+		// If its a null will freeze the window.
 		disconnectClient();
 		System.exit(0);
 	}
@@ -88,7 +76,7 @@ public class ClientController
 	private void makeCustomView()
 	{
 		userInterface = new View(this);
-		modelListener = (IModelListener) userInterface;
+		myListener = (IModelListener) userInterface;
 	}
 	
 	private void startClient()
@@ -97,31 +85,57 @@ public class ClientController
 		try 
 		{
 			client  = new Client(serverIP, serverPort, callHandler);
-			myRemoteObject = (IMyServer) client.getGlobal(IMyServer.class);
+			server = (IMyServer) client.getGlobal(IMyServer.class);
 		} 
 		catch (IOException e) 
 		{
-			e.printStackTrace();
+			userInterface.alertMessage("Server is not responding.");
+			System.exit(0);
 		}
-		registerAtServer();
-	}
-	
-	private void registerAtServer()
-	{
 		try 
 		{
-			callHandler.registerGlobal(IModelListener.class, modelListener);
+			callHandler.registerGlobal(IModelListener.class, myListener);
 		}
 		catch (LipeRMIException e) 
 		{
-			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
-		handleServerResponse(myRemoteObject.registerListener(username, modelListener));
+		register(UserType.PLAYER);
+	}
+	
+	private void register(UserType type)
+	{
+		Status response = null;
+		if(type == UserType.PLAYER)
+		{
+			response = server.registerAsPlayer(username, myListener);
+		}
+		else if(type == UserType.SPECTATOR)
+		{
+			response = server.registerAsSpectator(myListener);
+		}
+		handleServerResponse(response);
 	}
 	
 	private void handleServerResponse(Status serverResponse)
 	{
-		if(!serverResponse.equals(Status.OPERATION_DONE))
+		if(serverResponse == Status.OPERATION_DONE)
+		{
+			return;
+		}
+		else if(serverResponse == Status.GAME_FULL)
+		{
+			if(userInterface.choiceDialog("Game full",
+					"Would you like to become a spectator?") == 0)
+			{
+				register(UserType.SPECTATOR);
+			}
+			else
+			{
+				System.exit(0);
+			}
+		}
+		else
 		{
 			userInterface.alertMessage(serverResponse.getDescription());
 		}
@@ -129,7 +143,7 @@ public class ClientController
 	
 	private void disconnectClient()
 	{
-		myRemoteObject.unregisterListener(username);
+		server.unregisterUser(username);
 		try 
 		{
 			client.close();

@@ -35,7 +35,7 @@ public class MyServer extends Server implements IMyServer
 	}
 
 	@Override
-	public synchronized Status registerListener(String username, IModelListener client)
+	public synchronized Status registerAsPlayer(String username, IModelListener client)
 	{
 		if(!model.playerAvailable())
 		{
@@ -54,13 +54,26 @@ public class MyServer extends Server implements IMyServer
 		return Status.OPERATION_DONE;
 	}
 	@Override
-	public synchronized void unregisterListener(String username) 
+	public synchronized Status unregisterUser(String username) 
 	{
-		model.removeClient(username);
 		if(model.isPlaying(username))
 		{
-			// notify he left
+			model.notifyOfEndOfTheGame(true);
+			model.removeClient(username);
+			return Status.YOU_LOOSE;
 		}
+		model.removeClient(username);
+		return Status.OPERATION_DONE;
+	}
+	
+	@Override
+	public Status registerAsSpectator(IModelListener client)
+	{
+		String username = model.addClient("Spectator", client);
+		model.initializeClientBoard(client);
+		model.updateClientUsername(username, client);
+		model.updateClientsCurrentPlayer();
+		return Status.OPERATION_DONE;
 	}
 	
 	@Override
@@ -80,6 +93,7 @@ public class MyServer extends Server implements IMyServer
 		}
 		else if(model.floorFull())
 		{
+			model.notifyOfEndOfTheGame(true);
 			return Status.ITS_A_NULL;
 		}
 		
@@ -97,11 +111,7 @@ public class MyServer extends Server implements IMyServer
 		
 		if(model.positionMakeWinning(column, mostLowRow))
 		{
-			// will make a new board
-			model.notifyOfEndOfTheGame();
-			model.makeNewBoard();
-			// TODO who's turn?
-			// first spectator
+			model.notifyOfEndOfTheGame(false);
 			return Status.YOU_WON;
 		}
 		
