@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import connect4.client.IModelListener;
 import connect4.server.CaseType;
-import connect4.server.User.UserType;
+import connect4.server.database.User;
+import connect4.server.database.User.UserType;
 
 /* TODO
  * change all return null

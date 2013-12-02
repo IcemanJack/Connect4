@@ -3,7 +3,7 @@ package connect4.client;
 import java.io.IOException;
 import connect4.server.IMyServer;
 import connect4.server.Status;
-import connect4.server.User.UserType;
+import connect4.server.database.User.UserType;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
