@@ -10,6 +10,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import connect4.client.IModelListener;
+import connect4.server.database.MockDatabase.NoUsers;
+import connect4.server.database.MockDatabase.UserNotFound;
+
 
 public class Database implements IDatabase
 {
@@ -20,14 +24,13 @@ public class Database implements IDatabase
 
 	public static void main(String[] args) throws SQLException, ClassNotFoundException 
 	{
-		IDatabase db = null;
 		try
 		{
-			db = new Database();
+			IDatabase db = new Database();
 		}
 		catch(SQLException e)
 		{
-			db = new MockDatabase();
+			
 		}
 	}
 	
@@ -152,10 +155,33 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public boolean containsUser(User user)
-	{
+	public void removeUser(String username) throws UserNotFound {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean containsUser(String username) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public User getUserByName(String username) throws UserNotFound {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getListOfUsers() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IModelListener[] getClientsListeners() throws NoUsers {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/*

@@ -2,6 +2,7 @@ package connect4.server;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.SQLException;
 
 import net.sf.lipermi.net.IServerListener;
 
@@ -25,13 +26,38 @@ public class MyServer extends Server implements IMyServer
 	MyServer()
 	{
 		model = new Model();
+		initializeDatabase();
 		initializeGame();
 	}
 
 	MyServer(int columns, int rows, int connectToWin)
 	{
 		model = new Model(columns, rows, connectToWin);
+		initializeDatabase();
 		initializeGame();
+	}
+	
+	private void initializeDatabase()
+	{
+		String message = "";
+		try
+		{
+			model.connectToDatabase();
+		}
+		catch (SQLException e)
+		{
+			message = e.getMessage();
+		}
+		catch (ClassNotFoundException e)
+		{
+			message += e.getMessage();	
+		}
+		if(message.isEmpty())
+		{
+			System.out.println("Impossible to connect to the database" +
+					message + "\nFalling back on mock database.");
+			model.fallBackOnMock();
+		}
 	}
 
 	@Override

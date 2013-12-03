@@ -1,10 +1,15 @@
 package connect4.server;
 
+import java.sql.SQLException;
+
 import connect4.client.IModelListener;
 
 // used by server
 public interface IModel 
 {
+	public boolean connectToDatabase() throws SQLException, ClassNotFoundException;
+	public void fallBackOnMock();
+	
 	String addClient(String player, IModelListener client);
 	void removeClient(String player);
 	

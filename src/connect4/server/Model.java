@@ -1,12 +1,18 @@
 package connect4.server;
 
-import java.util.LinkedList;
+import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import connect4.client.IModelListener;
 import connect4.server.CaseType;
+import connect4.server.database.Database;
+import connect4.server.database.IDatabase;
+import connect4.server.database.MockDatabase;
+import connect4.server.database.MockDatabase.NoUsers;
+import connect4.server.database.MockDatabase.UserAlreadyExists;
+import connect4.server.database.MockDatabase.UserNotFound;
 import connect4.server.database.User;
 import connect4.server.database.User.UserType;
 
@@ -14,12 +20,11 @@ import connect4.server.database.User.UserType;
  * change all return null
  * throw custom exceptions, in server catch them
  * call super to get data from private classes
- * put finals WHERE YOU WISH.. needed.
  */
 
 public class Model implements IModel
 {
-	private LinkedList<User> users = new LinkedList<User>();
+	private IDatabase database;
 	private CaseType[][] board;
 	
 	private AtomicInteger columns = new AtomicInteger();
@@ -43,10 +48,28 @@ public class Model implements IModel
 		this.connectToWin.set(connectToWin);
 	}
 	
+	public void fallBackOnMock()
+	{
+		database = new MockDatabase();
+	}
+	
+	public boolean connectToDatabase() throws SQLException, ClassNotFoundException
+	{
+		try
+		{
+			database = new Database();
+		}
+		catch(SQLException e)
+		{
+			return false;
+		}
+		return true;
+	}
+	
 	@Override
 	public String addClient(String username, IModelListener client)
 	{
-		if(containsUserName(username))
+		if(database.containsUser(username))
 		{
 			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
@@ -61,7 +84,18 @@ public class Model implements IModel
 			type = UserType.SPECTATOR;
 		}
 		System.out.println("In addClient:\nplayer "+ username +"\nplayer1: "+ player1 +"\nplayer2: "+player2);
-		users.add(new User(username, client, type));
+		try
+		{
+			database.addUser(new User(username, client, type));
+		}
+		catch (SQLException e)
+		{
+			e.printStackTrace();
+		}
+		catch (UserAlreadyExists e) 
+		{
+			e.printStackTrace();
+		}
 		printListOfUsernamesInList("New player added. New list ");
 		
 		return username;
@@ -70,16 +104,17 @@ public class Model implements IModel
 	@Override
 	public void removeClient(String username) 
 	{
-		removePlayer(username);
-		User client = null;
-		for(User user: users)
+		try
 		{
-			if(user.getName().equals(username))
-			{
-				client = user;
-			}
+			database.removeUser(username);
 		}
-		users.remove(client);
+		catch (UserNotFound e)
+		{
+			e.printStackTrace();
+			System.out.println("Can't remove not existing player: "+username);
+			return;
+		}
+		removePlayer(username);
 		printListOfUsernamesInList("Player removed. New list ");
 	}
 	
@@ -95,9 +130,10 @@ public class Model implements IModel
 	@Override
 	public void initializeClientsBoard()
 	{
-		for(User user: users)
+		IModelListener[] listeners = getClientListeners();
+		for(IModelListener listener: listeners)
 		{
-			initializeClientBoard(user.getListener());
+			initializeClientBoard(listener);
 		} 
 	}
 	
@@ -105,7 +141,7 @@ public class Model implements IModel
 	public void updateClientUsername(String username, IModelListener client)
 	{
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(1); // TODO NOT SURE, refactoring
+		ExecutorService executor = Executors.newFixedThreadPool(1);
 		task = new UpdateListenerUsername(client, username);
 		executor.execute(task);
 		executor.shutdown();
@@ -114,11 +150,17 @@ public class Model implements IModel
 	@Override
 	public void updateClientsCurrentPlayer() 
 	{
+		IModelListener[] listeners = getClientListeners();
+		System.out.println("dfffffffff"+listeners.length);
+		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(users.size());
-		for(User user: users)
+		for(IModelListener listener: listeners)
 		{
-			task = new UpdateListenerCurrentPlayer(user.getListener(), currentPlayer);
+			if(listener == null)
+			{
+				System.out.println("cheval");
+			}
+			task = new UpdateListenerCurrentPlayer(listener, currentPlayer);
 			executor.execute(task);
 		}
 		executor.shutdown();
@@ -128,17 +170,12 @@ public class Model implements IModel
 	public void updateClientsBoardCase(int column, int row, String player)
 	{
 		CaseType caseType = getPlayerCaseType(player);
+		IModelListener[] listeners = getClientListeners();
+		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(users.size());
-		for(User user: users)
+		for(IModelListener listener: listeners)
 		{
-			task = new UpdateListenerBoardCase
-					(
-							user.getListener(),
-							column,
-							row,
-							caseType
-					);
+			task = new UpdateListenerBoardCase(listener, column, row, caseType);
 			executor.execute(task);
 		}
 		executor.shutdown();
@@ -147,17 +184,18 @@ public class Model implements IModel
 	@Override
 	public void notifyOfEndOfTheGame(boolean isNull)
 	{
-		System.out.println("NOTIFYYINH NIGGGA" + currentPlayer + " "+ isNull);
+		System.out.println("NOTIFYYINH " + currentPlayer + " "+ isNull);
 		String winner = "";
 		if(!isNull)
 		{
 			winner = currentPlayer;
 		}
+		IModelListener[] listeners = getClientListeners();
+		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(users.size());
-		for(User user: users)
+		for(IModelListener listener: listeners)
 		{
-			task = new UpdateEndOfTheGame(user.getListener(), winner);
+			task = new UpdateEndOfTheGame(listener, winner);
 			executor.execute(task);
 		}
 		executor.shutdown();
@@ -300,18 +338,6 @@ public class Model implements IModel
 		return false;
 	}
 	
-	private boolean containsUserName(String username)
-	{
-		for(User user: users)
-		{
-			if(user.getName().equals(username))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-	
 	@Override
 	public boolean positionMakeWinning(int column, int row)
 	{
@@ -358,22 +384,22 @@ public class Model implements IModel
 		return checkIfWinningCases(winningCases);
 	}
 	
+	private IModelListener[] getClientListeners()
+	{
+		try
+		{
+			return database.getClientsListeners();
+		}
+		catch (NoUsers e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
 	private void printListOfUsernamesInList(String header)
 	{
-		String output = header + " Usernames: [";
-		for(User user: users)
-		{
-			output += user.getName() + ",";
-		}
-		if (output.endsWith(","))
-		{
-			output = output.substring(0, output.length() - 1) + "]";
-		}
-		else if (output.endsWith("["))
-		{
-			output += "]";
-		}
-		System.out.println(output);
+		System.out.println(header + database.getListOfUsers());
 	} 
 	
 	private void addNewPlayer(String player)
@@ -451,7 +477,7 @@ public class Model implements IModel
 	
 	private String getNextAvailableUsername(String username, String newUsername, int counter)
 	{
-		if(containsUserName(newUsername))
+		if(database.containsUser(newUsername))
 		{
 			counter++;
 			newUsername = username.concat(String.valueOf(counter));

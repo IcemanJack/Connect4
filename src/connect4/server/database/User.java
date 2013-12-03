@@ -9,7 +9,7 @@ public class User
 	private UserType type;
 	private int score;
 	
-	// Temporary testing in MockDatabase;
+	// For testing in main of MockDatabase;
 	public User(String name)
 	{
 		this.name = name;
