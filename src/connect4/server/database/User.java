@@ -9,12 +9,15 @@ public class User
 	private UserType type;
 	private int score;
 	
-	// For testing in main of MockDatabase;
-	public User(String name)
+	// Database
+	public User(String name, UserType type)
 	{
 		this.name = name;
+		this.type = type;
+		this.score = 0;
 	}
 	
+	// MockDabase
 	public User(String name, IModelListener listener, UserType type)
 	{
 		this.name = name;
@@ -57,12 +60,6 @@ public class User
 	{
 		this.score = score;
 	}
-
-	public enum UserType
-	{
-		PLAYER,
-		SPECTATOR
-	}
 	
 	public String getTableInfo()
 	{
@@ -70,5 +67,23 @@ public class User
 				"|listener|\n" +
 				"|type    |\n" +
 				"|score   |\n";
+	}
+	
+	public enum UserType
+	{
+		PLAYER(0),
+		SPECTATOR(2);
+		
+		private final int value;
+		
+	    private UserType(int value)
+	    {
+	        this.value = value;
+	    }
+		
+		public int toInt()
+		{
+			return value;
+		}
 	}
 }

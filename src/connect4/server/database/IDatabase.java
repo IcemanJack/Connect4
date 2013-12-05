@@ -2,6 +2,8 @@ package connect4.server.database;
 
 import java.sql.SQLException;
 
+import org.postgresql.util.PSQLException;
+
 import connect4.client.IModelListener;
 import connect4.server.database.MockDatabase.NoUsers;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
@@ -14,7 +16,7 @@ public interface IDatabase
 	
 	public void addGame(User player1, User player2,
 			User winner, User loser, boolean isNull) throws SQLException;
-	public void addUser(User user) throws SQLException, UserAlreadyExists;
+	public void addUser(User user) throws UserAlreadyExists, PSQLException;
 	public void updateUserScore(User user, int score) throws SQLException, UserNotFound;
 	
 	public void removeUser(String username) throws UserNotFound;
