@@ -10,70 +10,41 @@ import org.junit.runner.notification.Failure;
 
 public class ComputerTests
 {
-	static Controller x = new Controller(7, 6, 4);
+	static Controller game1 = new Controller(7, 6, 4);
+	//static Controller game2 = new Controller(7, 6, 4);
 	
 	@Test
-	public void checkIfComputerPlayWhen3TokenPlayer1()
+	public void checkIfComputerPlayWhen3CaseTypePlayer1()
 	{
-		// UP
-		x.play(0, 0); //RED
-		x.play(0, 1); //BLACK
-		x.play(0, 0); //RED
-		x.play(0, 2); //BLACK
-		x.play(0, 0); //RED
-		Assert.assertFalse(x.modelAtPositionIsAvailable(0, 2)); //BLACK
+		//NO WINNING CASE
+		game1.play(0, 1); //RED
+		Assert.assertFalse(game1.modelAtPositionIsAvailable(1, 4)); //BLACK
+		game1.play(0, 2); //RED
+		Assert.assertFalse(game1.modelAtPositionIsAvailable(2, 4)); //BLACK
 		
-		// RIGHT
-		x.play(0, 1); //RED
-		x.play(0, 3); //BLACK
-		x.play(0, 2); //RED
-		Assert.assertFalse(x.modelAtPositionIsAvailable(3, 4)); //BLACK
+		//LEFT
+		game1.play(0, 3); //RED
+		Assert.assertFalse(game1.modelAtPositionIsAvailable(0, 5)); //BLACK
 		
-		// LEFT
-		x.play(0, 4); //RED
-		x.play(0, 4); //BLACK
-		x.play(0, 4); //RED
-		x.play(0, 5); //BLACK
-		x.play(0, 3); //RED
-		x.play(0, 5); //BLACK
-		x.play(0, 2); //RED
-		Assert.assertFalse(x.modelAtPositionIsAvailable(1, 3)); //BLACK
+		//RIGHT
+		game1.play(0, 3); //RED
+		Assert.assertFalse(game1.modelAtPositionIsAvailable(4, 5)); //BLACK
+
+		//UP
+		game1.play(0, 3); //RED
+		Assert.assertFalse(game1.modelAtPositionIsAvailable(3, 2)); //BLACK
 		
-		//DIAGONAL
-		x.play(0, 4); //RED
-		Assert.assertFalse(x.modelAtPositionIsAvailable(3, 2)); //BLACK
+//		//DIAGONAL
+//		x.play(0, 4); //RED
+//		Assert.assertFalse(x.modelAtPositionIsAvailable(3, 2)); //BLACK
 	}
 
-	@Test
-	public void checkIfComputerPlayWhen3TokenComputer()
-	{
-//		// UP
-//		x.play(0, 1); //RED
-//		x.play(0, 0); //BLACK
-//		x.play(0, 1); //RED
-//		x.play(0, 0); //BLACK
-//		x.play(0, 2); //RED
-//		x.play(0, 0); //BLACK
-//		x.play(0, 2); //RED
-//		Assert.assertFalse(x.modelAtPositionIsAvailable(0, 2)); //BLACK
-//		
-//		// RIGHT
-//		x.play(0, 1); //RED
-//		x.play(0, 3); //BLACK
-//		x.play(0, 2); //RED
-//		Assert.assertFalse(x.modelAtPositionIsAvailable(3, 4)); //BLACK
-//		
-//		// LEFT
-//		x.play(0, 4); //RED
-//		x.play(0, 4); //BLACK
-//		x.play(0, 4); //RED
-//		x.play(0, 5); //BLACK
-//		x.play(0, 3); //RED
-//		x.play(0, 5); //BLACK
-//		x.play(0, 2); //RED
-//		Assert.assertFalse(x.modelAtPositionIsAvailable(1, 3)); //BLACK
-	}
-	
+//	@Test
+//	public void checkIfComputerPlayWhen3TokenComputer()
+//	{
+		
+//	}
+
 	public static void main(String[] args)
 	{
 		Result result = JUnitCore.runClasses(ComputerTests.class);
@@ -85,7 +56,22 @@ public class ComputerTests
 		{
 			System.out.println("\t" + failure.toString() + "\n\n");	
 		}
-		x.quitTheGame();
+		
+		//threadSleep(1000);
+		
+		//game1.quitTheGame();
+	}
+	
+	private static void threadSleep(int milliseconds)
+	{
+		try
+		{
+			Thread.sleep(1000);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 	}
 }
 
