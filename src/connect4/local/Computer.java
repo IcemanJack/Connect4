@@ -21,12 +21,7 @@ public class Computer
 		{
 			for (int j = 0; j < model.rows; j++)
 			{
-				if (playWhenRowEqualZero(mostLowRow))
-				{
-					return true;
-				}
-				
-				if (playWhen3CaseType(column, mostLowRow, i, j))
+				if (playWhenRowEqualZero(mostLowRow) || playWhen3CaseType(column, mostLowRow, i, j))
 				{
 					return true;
 				}
@@ -71,15 +66,7 @@ public class Computer
 		{
 			if (posY != 5 && isAvailable(posX, posY + 1))
 			{
-				if (checkIfNumberIsImpair(model.getColumnLowestFreeRow(posX) - posY))
-				{
-					play(mostLowRow, column);
-				}
-				else
-				{
-					//Attaque diagonal
-					play(posY + 1, posX);
-				}
+				playIfNumberIsImpair((model.getColumnLowestFreeRow(posX) - posY), column, mostLowRow, posX, posY);
 			}
 			else
 			{
@@ -96,13 +83,14 @@ public class Computer
 		return model.isAvailable(column, row);
 	}
 	
-	private boolean checkIfNumberIsImpair(int number)
+	private void playIfNumberIsImpair(int number, int column, int mostLowRow, int posX, int posY)
 	{
 		if (number % 2 == 1)
 		{
-			return true;
+			play(mostLowRow, column);
 		}
 		
-		return false;
+		//Attaque diagonal
+		play(posY + 1, posX);
 	}
 }
