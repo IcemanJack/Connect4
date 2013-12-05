@@ -1,0 +1,14 @@
+1.Install PostGresSQL and pgAdmin3
+www.devsniper.com/postgresql-installation-and-settings-on-ubuntu-12-04/
+
+2.Create Tables
+
+3. Get the driver and add to build path.
+For Java 7 only, won't work on 6.
+*******************************************************************************
+Connect the DB to Eclipse
+
+	Download the driver: http://jdbc.postgresql.org/download.html   JDBC41
+	Include the lib and make sure it have been added in the Classpath
+	SHOULD BE INCLUDED WITH THE SYNC
+*******************************************************************************
