@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import connect4.client.IModelListener;
+import connect4.server.database.User.UserType;
 
 public class MockDatabase implements IDatabase
 {
@@ -19,12 +20,13 @@ public class MockDatabase implements IDatabase
 	{
 		IDatabase db = new MockDatabase();
 		
-		User u1 = new User("1");
-		User u2 = new User("1");
+		User u1 = new User("1", UserType.PLAYER);
+		User u2 = new User("1", UserType.PLAYER);
 		try
 		{
 			db.addUser(u1);
 			db.addUser(u2);
+			// test error
 			db.addUser(u1);
 		}
 		catch (UserAlreadyExists e)
@@ -73,7 +75,7 @@ public class MockDatabase implements IDatabase
 		else if(table == Tables.User)
 		{
 			output = "----------\n|  " + table + "  |\n----------\n" + 
-					new User("u").getTableInfo() +
+					new User("u", UserType.PLAYER).getTableInfo() +
 					"----------\n";
 		}
 		return output;
