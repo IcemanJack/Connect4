@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -30,7 +31,7 @@ public class Database implements IDatabase
 		}
 		catch(SQLException e)
 		{
-			
+			System.out.println("Failed to connect\n"+e.getMessage()+" "+e.getSQLState());
 		}
 	}
 	
