@@ -2,30 +2,24 @@ package connect4.server.database;
 
 import java.sql.SQLException;
 
-import org.postgresql.util.PSQLException;
-
-import connect4.client.IModelListener;
-import connect4.server.database.MockDatabase.NoUsers;
+import connect4.server.database.MockDatabase.TableDoesNotExist;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
-import connect4.server.database.MockDatabase.UserNotFound;
+import connect4.server.database.MockDatabase.UserIsNotFound;
 
 public interface IDatabase
 {
 	public void openConnection() throws SQLException, ClassNotFoundException;
 	public void closeConnection() throws SQLException;
 	
-	public void addGame(User player1, User player2,
-			User winner, User loser, boolean isNull) throws SQLException;
-	public void addUser(User user) throws UserAlreadyExists, PSQLException;
-	public void updateUserScore(User user, int score) throws SQLException, UserNotFound;
+	public void addUser(User user) throws SQLException, UserAlreadyExists;
+	public void removeUser(String username) throws SQLException, UserIsNotFound;
 	
-	public void removeUser(String username) throws UserNotFound;
+	public void updateUserScore(User user, int score) throws SQLException, UserIsNotFound;
 	
-	public boolean containsUser(String username);
-	
-	public int getPlayerScore(User player) throws SQLException, UserNotFound;
-	public String getTableDescription(Tables table) throws SQLException;
-	public User getUserByName(String username) throws UserNotFound;
-	public String getListOfUsers();
-	public IModelListener[] getClientsListeners() throws NoUsers;
+	public boolean containsUser(String username) throws SQLException;
+	public int getPlayerScore(User player) throws SQLException, UserIsNotFound;
+	public String getTableDescription(Tables table) throws SQLException, TableDoesNotExist;
+//	public User getUserByName(String username) throws SQLException, UserIsNotFound;
+//	public String getListOfUsers() throws SQLException;
+//	public IModelListener[] getClientsListeners();
 }

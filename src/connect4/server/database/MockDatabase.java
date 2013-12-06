@@ -2,26 +2,20 @@ package connect4.server.database;
 
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-
-import connect4.client.IModelListener;
-import connect4.server.database.User.UserType;
+import java.util.TreeMap;
 
 public class MockDatabase implements IDatabase
 {
-	Set<Game> games = Collections.synchronizedSet(new HashSet<Game>());
-	Map<String, User> users = Collections.synchronizedMap(new HashMap<String, User>());
+	private Map<String, User> users = Collections.synchronizedMap(new TreeMap<String, User>());
 
 	// Tests
 	public static void main(String[] args) throws SQLException, ClassNotFoundException 
 	{
 		IDatabase db = new MockDatabase();
 		
-		User u1 = new User("1", UserType.PLAYER);
-		User u2 = new User("1", UserType.PLAYER);
+		User u1 = new User("1");
+		User u2 = new User("1");
 		try
 		{
 			db.addUser(u1);
@@ -31,14 +25,14 @@ public class MockDatabase implements IDatabase
 		}
 		catch (UserAlreadyExists e)
 		{
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 		}
-		System.out.println(db.getListOfUsers());
+		
 		try
 		{
 			db.updateUserScore(u1, 10);
 		}
-		catch (UserNotFound e)
+		catch (UserIsNotFound e)
 		{
 			e.printStackTrace();
 		}
@@ -46,7 +40,7 @@ public class MockDatabase implements IDatabase
 		{
 			db.updateUserScore(u1, -1);
 		}
-		catch (UserNotFound e)
+		catch (UserIsNotFound e)
 		{
 			e.printStackTrace();
 		}
@@ -54,28 +48,25 @@ public class MockDatabase implements IDatabase
 		{
 			System.out.println(db.getPlayerScore(u1));
 		}
-		catch (UserNotFound e)
+		catch (UserIsNotFound e)
 		{
 			e.printStackTrace();
 		}
-		System.out.println(db.getTableDescription(Tables.Game));
-		System.out.println(db.getTableDescription(Tables.User));
+		try {
+			System.out.println(db.getTableDescription(Tables.usr));
+		} catch (TableDoesNotExist e) {
+			System.err.println(e.getMessage());
+		}
 	}
 	
 	@Override
 	public String getTableDescription(Tables table) 
 	{
 		String output = "No table " + table;
-		if(table == Tables.Game)
+		if(table == Tables.usr)
 		{
-			output = "---------\n| " + table + "  |\n---------\n" + 
-					new Game().getTableInfo() +
-					"---------\n";
-		}
-		else if(table == Tables.User)
-		{
-			output = "----------\n|  " + table + "  |\n----------\n" + 
-					new User("u", UserType.PLAYER).getTableInfo() +
+			output = "----------\n|  " + table + "   |\n----------\n" + 
+					new User("u").getTableInfo() +
 					"----------\n";
 		}
 		return output;
@@ -94,13 +85,6 @@ public class MockDatabase implements IDatabase
 	}
 
 	@Override
-	public void addGame(User player1, User player2,
-			User winner, User loser, boolean isNull) 
-	{
-		games.add(new Game(games.size(), player1, player2, winner, loser, isNull));
-	}
-
-	@Override
 	public void addUser(User user) throws UserAlreadyExists
 	{
 		if(containsUser(user.getName()))
@@ -111,17 +95,17 @@ public class MockDatabase implements IDatabase
 	}
 	
 	@Override
-	public void removeUser(String username) throws UserNotFound
+	public void removeUser(String username) throws UserIsNotFound
 	{
 		if(!containsUser(username))
 		{
-			throw new UserNotFound();
+			throw new UserIsNotFound();
 		}
 		users.remove(username);
 	}
 
 	@Override
-	public void updateUserScore(User user, int points) throws UserNotFound
+	public void updateUserScore(User user, int points) throws UserIsNotFound
 	{
 		boolean updated = false;
 		for(String current: users.keySet())
@@ -134,32 +118,12 @@ public class MockDatabase implements IDatabase
 		}
 		if(!updated)
 		{
-			throw new UserNotFound();
+			throw new UserIsNotFound();
 		}
 	}
 	
 	@Override
-	public IModelListener[] getClientsListeners() throws NoUsers
-	{
-		IModelListener[] listeners =  new IModelListener[users.size()];
-		if(users.size() > 0)
-		{
-			int index = 0;
-			for(String usr: users.keySet())
-			{
-				listeners[index] = users.get(usr).getListener();
-				index++;
-			}
-		}
-		else
-		{
-			throw new NoUsers();
-		}
-		return listeners;
-	}
-
-	@Override
-	public int getPlayerScore(User user) throws UserNotFound
+	public int getPlayerScore(User user) throws UserIsNotFound
 	{
 		for(String current: users.keySet())
 		{
@@ -168,42 +132,9 @@ public class MockDatabase implements IDatabase
 				return users.get(current).getScore();
 			}
 		}
-		throw new UserNotFound();
+		throw new UserIsNotFound();
 	}
 	
-	@Override
-	public User getUserByName(String username) throws UserNotFound
-	{
-		for(String current: users.keySet())
-		{
-			if(current.equals(username))
-			{
-				return users.get(current);
-			}
-		}
-		throw new UserNotFound();
-	}
-	
-	@Override
-	public String getListOfUsers()
-	{
-		String output = "[";
-		for(String user: users.keySet())
-		{
-			output += user + ",";
-		}
-		if (output.endsWith(","))
-		{
-			output = output.substring(0, output.length() - 1) + "]";
-		}
-		else if (output.endsWith("["))
-		{
-			output += "]";
-		}
-		return output;
-	} 
-	
-	@Override
 	public boolean containsUser(String username)
 	{
 		for(String current: users.keySet())
@@ -216,13 +147,22 @@ public class MockDatabase implements IDatabase
 		return false;
 	}
 	
-	public class UserNotFound extends Exception
+	public class TableDoesNotExist extends Exception
 	{
 		private static final long serialVersionUID = -4618619414569071264L;
 
-		public UserNotFound() 
+		public TableDoesNotExist() 
 	    {
-	        super("User not found");
+	        super("The table doesn't exists.");
+	    }
+	}	
+	public class UserIsNotFound extends Exception
+	{
+		private static final long serialVersionUID = -4618619414569071264L;
+
+		public UserIsNotFound() 
+	    {
+	        super("User isn't found.");
 	    }
 	}
 	
@@ -232,17 +172,17 @@ public class MockDatabase implements IDatabase
 
 		public UserAlreadyExists() 
 	    {
-	        super("User already exists");
+	        super("User already exists.");
 	    }
 	}
 	
-	public class NoUsers extends Exception
+	public class NoUsersExits extends Exception
 	{
 		private static final long serialVersionUID = -40295224831334873L;
 
-		public NoUsers() 
+		public NoUsersExits() 
 	    {
-	        super("There is no users");
+	        super("There is no users in the table.");
 	    }
 	}
 }

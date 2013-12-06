@@ -1,6 +1,9 @@
 package connect4.server;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,9 +13,6 @@ import connect4.server.CaseType;
 import connect4.server.database.Database;
 import connect4.server.database.IDatabase;
 import connect4.server.database.MockDatabase;
-import connect4.server.database.MockDatabase.NoUsers;
-import connect4.server.database.MockDatabase.UserAlreadyExists;
-import connect4.server.database.MockDatabase.UserNotFound;
 import connect4.server.database.User;
 import connect4.server.database.User.UserType;
 
@@ -26,34 +26,34 @@ public class Model implements IModel
 {
 	private IDatabase database;
 	private CaseType[][] board;
+	// Name, User Object
+	// changed to tree temp tests
+	private Map<String, User> users = Collections.synchronizedMap(new TreeMap<String, User>());
 	
 	private AtomicInteger columns = new AtomicInteger();
 	private AtomicInteger rows = new AtomicInteger();
 	private AtomicInteger connectToWin = new AtomicInteger();
 	
-	private String player1;
-	private String player2;
-	private String currentPlayer;
+	private String player1 = "";
+	private String player2 = "";
+	private String currentPlayer = "";
 	
 	public Model()
 	{
 		this.columns.set(7);
 		this.rows.set(6);
 		this.connectToWin.set(4);
+		makeNewBoard();
 	}
 	public Model(int columns, int rows, int connectToWin)
 	{
 		this.columns.set(columns);
 		this.rows.set(rows);
 		this.connectToWin.set(connectToWin);
+		makeNewBoard();
 	}
 	
-	public void fallBackOnMock()
-	{
-		database = new MockDatabase();
-	}
-	
-	public boolean connectToDatabase() throws SQLException, ClassNotFoundException
+	public boolean connectToDatabase()
 	{
 		try
 		{
@@ -61,62 +61,57 @@ public class Model implements IModel
 		}
 		catch(SQLException e)
 		{
+			System.err.println(e.getMessage());
+			return false;
+		}
+		catch(UnsupportedClassVersionError e)
+		{
+			System.err.println(e.getMessage());
+			return false;
+		}
+		catch(ClassNotFoundException e)
+		{
+			System.err.println(e.getMessage());
 			return false;
 		}
 		return true;
 	}
 	
+	public void fallBackOnMock()
+	{
+		database = new MockDatabase();
+	}
+	
 	@Override
 	public String addClient(String username, IModelListener client)
 	{
-		if(database.containsUser(username))
+		if(containsUser(username))
 		{
 			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
-		UserType type = null;
+		
+		UserType type =  UserType.SPECTATOR;
 		if(playerAvailable())
 		{
 			addNewPlayer(username);
 			type = UserType.PLAYER;
 		}
-		else
-		{
-			type = UserType.SPECTATOR;
-		}
-		System.out.println("In addClient:\nplayer "+ username +"\nplayer1: "+ player1 +"\nplayer2: "+player2);
-		try
-		{
-			database.addUser(new User(username, client, type));
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-		catch (UserAlreadyExists e) 
-		{
-			e.printStackTrace();
-		}
-		printListOfUsernamesInList("New player added. New list ");
 		
+		User user = new User(username, client, type);
+		users.put(username, user);
+		
+		printListOfUsernamesInList("New player added. New u ");
 		return username;
 	}
 	
 	@Override
-	public void removeClient(String username) 
+	public void removeClient(String username)
 	{
-		try
-		{
-			database.removeUser(username);
-		}
-		catch (UserNotFound e)
-		{
-			e.printStackTrace();
-			System.out.println("Can't remove not existing player: "+username);
-			return;
-		}
 		removePlayer(username);
+		users.remove(username);
 		printListOfUsernamesInList("Player removed. New list ");
 	}
+	
 	
 	@Override
 	public void initializeClientBoard(IModelListener client) 
@@ -125,32 +120,26 @@ public class Model implements IModel
 		Runnable task = new InitializeListenerBoard(client, columns.get(), rows.get());
 		executor.execute(task);
 		executor.shutdown();
+		System.out.println("initializeClientBoard done");
 	}
 	
 	@Override
-	public void initializeClientsBoard()
-	{
-		IModelListener[] listeners = getClientListeners();
-		for(IModelListener listener: listeners)
-		{
-			initializeClientBoard(listener);
-		} 
-	}
-	
-	@Override
-	public void updateClientUsername(String username, IModelListener client)
+	public void updateClientUsername(String name, IModelListener client)
 	{
 		Runnable task;
 		ExecutorService executor = Executors.newFixedThreadPool(1);
-		task = new UpdateListenerUsername(client, username);
+		task = new UpdateListenerUsername(client, name);
+		System.out.println("executing");
 		executor.execute(task);
+		System.out.println("shuting down");
 		executor.shutdown();
+		System.out.println(name + " updated ");
 	}
 	
 	@Override
 	public void updateClientsCurrentPlayer() 
 	{
-		IModelListener[] listeners = getClientListeners();
+		IModelListener[] listeners = getClientsListeners();
 		System.out.println("dfffffffff"+listeners.length);
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
@@ -170,7 +159,7 @@ public class Model implements IModel
 	public void updateClientsBoardCase(int column, int row, String player)
 	{
 		CaseType caseType = getPlayerCaseType(player);
-		IModelListener[] listeners = getClientListeners();
+		IModelListener[] listeners = getClientsListeners();
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
 		for(IModelListener listener: listeners)
@@ -184,13 +173,12 @@ public class Model implements IModel
 	@Override
 	public void notifyOfEndOfTheGame(boolean isNull)
 	{
-		System.out.println("NOTIFYYINH " + currentPlayer + " "+ isNull);
 		String winner = "";
 		if(!isNull)
 		{
 			winner = currentPlayer;
 		}
-		IModelListener[] listeners = getClientListeners();
+		IModelListener[] listeners = getClientsListeners();
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
 		for(IModelListener listener: listeners)
@@ -199,21 +187,6 @@ public class Model implements IModel
 			executor.execute(task);
 		}
 		executor.shutdown();
-	}
-	
-	@Override
-	public void makeNewBoard()
-	{
-		board = new CaseType[columns.get()][rows.get()];
-		for(int column = 0; column < columns.get(); column++)
-		{
-			for(int row = 0; row < rows.get(); row++)
-			{
-				board[column][row] = CaseType.NONE;
-			}
-		}
-		player1 = "";
-		player2 = "";
 	}
 	
 	@Override
@@ -228,19 +201,8 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void movePlayerToPosition(int column, int row, String player)
-	{
-		try
-		{
-			board[column][row] = getPlayerCaseType(player);
-		}
-		catch(ArrayIndexOutOfBoundsException e){}
-	}
-	
-	@Override
 	public boolean isPlaying(String player)
 	{
-		System.out.println("In isPlaying:\nplayer "+ player +"\nplayer1: "+ player1 +"\nplayer2: "+player2);
 		if((player.equals(player1)) || (player.equals(player2)))
 		{
 			return true;
@@ -271,23 +233,6 @@ public class Model implements IModel
 	public String getCurrentPlayer() 
 	{
 		return currentPlayer;
-	}
-	
-	@Override
-	public String getNextPlayer()
-	{
-		if(currentPlayer.equals(player1))
-		{
-			return player1;
-		}
-		else if(currentPlayer.equals(player1))
-		{
-			return player1;
-		}
-		else
-		{
-			return null;
-		}
 	}
 	
 	@Override
@@ -384,22 +329,49 @@ public class Model implements IModel
 		return checkIfWinningCases(winningCases);
 	}
 	
-	private IModelListener[] getClientListeners()
+	private IModelListener[] getClientsListeners()
 	{
-		try
+		IModelListener[] listeners =  new IModelListener[users.size()];
+		if(users.size() > 0)
 		{
-			return database.getClientsListeners();
+			int index = 0;
+			for(String usr: users.keySet())
+			{
+				listeners[index] = users.get(usr).getListener();
+				index++;
+			}
 		}
-		catch (NoUsers e)
+		return listeners;
+	}
+	
+	private boolean containsUser(String username)
+	{
+		for(String current: users.keySet())
 		{
-			e.printStackTrace();
+			if(current.equals(username))
+			{
+				return true;
+			}
 		}
-		return null;
+		return false;
 	}
 	
 	private void printListOfUsernamesInList(String header)
 	{
-		System.out.println(header + database.getListOfUsers());
+		String output = "[";
+		for(String user: users.keySet())
+		{
+			output += user + ",";
+		}
+		if (output.endsWith(","))
+		{
+			output = output.substring(0, output.length() - 1) + "]";
+		}
+		else if (output.endsWith("["))
+		{
+			output += "]";
+		}
+		System.out.println(header + output);
 	} 
 	
 	private void addNewPlayer(String player)
@@ -477,13 +449,27 @@ public class Model implements IModel
 	
 	private String getNextAvailableUsername(String username, String newUsername, int counter)
 	{
-		if(database.containsUser(newUsername))
+		if(containsUser(newUsername))
 		{
 			counter++;
 			newUsername = username.concat(String.valueOf(counter));
 			getNextAvailableUsername(username, newUsername, counter);
 		}
 		return newUsername;
+	}
+	
+	private void makeNewBoard()
+	{
+		board = new CaseType[columns.get()][rows.get()];
+		for(int column = 0; column < columns.get(); column++)
+		{
+			for(int row = 0; row < rows.get(); row++)
+			{
+				board[column][row] = CaseType.NONE;
+			}
+		}
+		player1 = "";
+		player2 = "";
 	}
 	
 	private class InitializeListenerBoard implements Runnable 

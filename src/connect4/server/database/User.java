@@ -9,11 +9,10 @@ public class User
 	private UserType type;
 	private int score;
 	
-	// Database
-	public User(String name, UserType type)
+	// Tests
+	public User(String name)
 	{
 		this.name = name;
-		this.type = type;
 		this.score = 0;
 	}
 	

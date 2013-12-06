@@ -6,17 +6,11 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.postgresql.util.PSQLException;
-
-import connect4.client.IModelListener;
-import connect4.server.database.MockDatabase.NoUsers;
+import connect4.server.database.MockDatabase.TableDoesNotExist;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
-import connect4.server.database.MockDatabase.UserNotFound;
-import connect4.server.database.User.UserType;
+import connect4.server.database.MockDatabase.UserIsNotFound;
 
 
 public class Database implements IDatabase
@@ -26,6 +20,7 @@ public class Database implements IDatabase
 	private static String passwd = "mypassword";
 	private static Connection connection;
 
+	// Tests
 	public static void main(String[] args) throws SQLException, ClassNotFoundException 
 	{
 		IDatabase db = null;
@@ -38,24 +33,33 @@ public class Database implements IDatabase
 			System.out.println("Failed to connect\n"+e.getMessage()+" "+e.getSQLState());
 		}
 		
-		System.out.println(db.getTableDescription(Tables.Game));
-		System.out.println(db.getTableDescription(Tables.User));
+		try {System.out.println(db.getTableDescription(Tables.usr));} 
+		catch (TableDoesNotExist e1){ e1.printStackTrace();}
+		
+		User u1 = new User("Peter");
+		
+		try{db.addUser(u1);}
+		catch (SQLException e){System.err.println(e.getMessage());}
+		catch (UserAlreadyExists e){e.printStackTrace();}
+		
+		try { System.out.println(db.getPlayerScore(u1));} 
+		catch (UserIsNotFound e) {e.printStackTrace();}
+		
+		try{db.updateUserScore(u1, 12);}
+		catch (SQLException e){e.printStackTrace();}
+		catch (UserIsNotFound e) {e.printStackTrace();}
+		
+		try { System.out.println(db.getPlayerScore(u1));} 
+		catch (UserIsNotFound e) {e.printStackTrace();}
 		
 		
-		try
-		{
-			db.addUser(new User("Peter", UserType.PLAYER));
-		}
-		catch (PSQLException e)
-		{
-			System.out.println(e.getMessage());
-		}
-		catch (UserAlreadyExists e)
-		{
-			e.printStackTrace();
-		}
+		System.out.println(db.containsUser(u1.getName()));
 		
-		System.out.println(db.getListOfUsers());
+		try{db.removeUser(u1.getName());}
+		catch (SQLException e){e.printStackTrace();}
+		catch (UserIsNotFound e) {e.printStackTrace();}
+		
+		System.out.println(db.containsUser(u1.getName()));
 	}
 	
 	public Database() throws ClassNotFoundException, SQLException
@@ -69,16 +73,31 @@ public class Database implements IDatabase
 	}
 	
 	@Override
+	public void openConnection() throws SQLException, ClassNotFoundException 
+	{
+		Database.connection = DriverManager.getConnection(url, user, passwd);
+		Class.forName("org.postgresql.Driver");
+		System.out.println("DRIVER OK ! ");
+		System.out.println("Connection effective !");
+	}
+	
+	@Override
+	public void closeConnection() throws SQLException 
+	{
+			Database.connection.close();
+	}
+	
+	@Override
 	public String getTableDescription(Tables table) throws SQLException
 	{
 		String output = "No table " + table;
 		DatabaseMetaData dbmd = connection.getMetaData();
         ResultSet rs = dbmd.getColumns(null, null, table.toString(), null);
-		if((table == Tables.Game) || (table == Tables.User))
+		if(table == Tables.usr)
 		{
 			String column = "";
 			String lineEnd = "        |\n";
-			output = "---------\n| " + table + "  |\n---------"; 
+			output = "---------\n| " + table + "   |\n---------"; 
 			while (rs.next())
 	        {
 				column = rs.getString("COLUMN_NAME");
@@ -91,15 +110,14 @@ public class Database implements IDatabase
 	}
 	
 	@Override
-	public void addUser(User user) throws PSQLException, UserAlreadyExists 
+	public void addUser(User user) throws SQLException 
 	{
         try
         {
-            String stm = "INSERT INTO usr (name, score, type) VALUES (?, ?, ?)";
+            String stm = "INSERT INTO usr (name, score) VALUES (?, ?)";
             PreparedStatement state = connection.prepareStatement(stm);
 			state.setString(1, user.getName());
 			state.setInt(2, user.getScore());
-			state.setInt(3, user.getType().toInt());
 			state.executeUpdate();
 
         }
@@ -114,65 +132,30 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public void addGame(User player1, User player2,
-			User winner, User loser, boolean isNull) throws SQLException 
-	{
-			
-			PreparedStatement state = connection.prepareStatement("INSERT INTO Game"
-					+ "(date, user1, user2, winner, loser, isNull) " +
-					"VALUES"+"(?,?,?,?,?)");
-			
-			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-			Date date = new Date();
-						
-			state.setString(1,dateFormat.format(date.getTime()));
-			state.setString(2, player1.getName());
-			state.setString(3, player2.getName());
-			state.setString(4, winner.getName());
-			state.setString(5, loser.getName());
-			state.setBoolean(6, isNull);
-			state.executeUpdate();
-			
-			state.close();
-	}
-
-	@Override
 	public void updateUserScore(User user, int score) throws SQLException 
 	{		
-			PreparedStatement state = connection.prepareStatement(
-					"SELECT score FROM User WHERE name = ?");
-			ResultSet result = state.executeQuery();
-			result.updateInt("score", user.getScore() + score);
+			user.setScore(getPlayerScore(user) + score);
+			PreparedStatement state = connection.prepareStatement
+					("UPDATE usr SET score = ? WHERE name = ?");
+			state.setInt(1, user.getScore());
+			state.setString(2, user.getName());
+			state.executeUpdate();
 			state.close();
-			result.close();
-	}
-	
-	@Override
-	public void closeConnection() throws SQLException 
-	{
-			Database.connection.close();
-	}
-
-	@Override
-	public void openConnection() throws SQLException, ClassNotFoundException 
-	{
-		Database.connection = DriverManager.getConnection(url, user, passwd);
-		Class.forName("org.postgresql.Driver");
-		System.out.println("DRIVER OK ! ");
-		System.out.println("Connection effective !");
 	}
 
 	@Override
 	public int getPlayerScore(User user) throws SQLException
 	{
-		
-		PreparedStatement state = connection.prepareStatement(
-				"SELECT * FROM User WHERE name = ?");
+		PreparedStatement state = connection.prepareStatement
+				("SELECT score FROM usr WHERE name = ?");
 		state.setString(1, user.getName());
-
 		ResultSet result = state.executeQuery();
-		int score = result.getInt("score");
 		
+		int score = -1;
+		if(result.next())
+		{
+			score = result.getInt("score");
+		}
 		state.close();
 		result.close();
 		
@@ -180,71 +163,33 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public void removeUser(String username) throws UserNotFound {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public boolean containsUser(String username) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public User getUserByName(String username) throws UserNotFound {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getListOfUsers()
+	public void removeUser(String username) throws SQLException
 	{
-		String output = "No users";
+		PreparedStatement state = connection.prepareStatement
+				("DELETE FROM usr WHERE name = ?");
+		state.setString(1, username);
+		state.execute();
+		state.close();
+	}
+
+	@Override
+	public boolean containsUser(String username) throws SQLException
+	{
 		try
 		{
-			ResultSet rs = connection.createStatement().executeQuery("SELECT * FROM usr");
-			output = "Users:\n";
-	        while (rs.next())
+			ResultSet result = connection.createStatement().executeQuery("SELECT name FROM usr");
+	        while (result.next())
 	        {
-	        	output += rs.getString(1) + "\n";
+	        	if(result.getString(1).equals(username))
+	        	{
+	        		return true;
+	        	}
 	        }
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
-        return output;
+		return false;
 	}
-
-	@Override
-	public IModelListener[] getClientsListeners() throws NoUsers {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/*
-	@Override
-	public HashSet<PlayerScore> getScoreTable() throws SQLException
-	{
-		HashSet<PlayerScore> scoreTable = new HashSet<PlayerScore>();
-		PreparedStatement state = conn.prepareStatement("SELECT * FROM ?");
-		state.setString(1, "User");
-		//ResultSet contains the result of SQL request
-		ResultSet result = state.executeQuery();
-		while(result.next())
-		{
-			scoreTable.add(getPlayerScore(result.getString("username")));
-		}
-		
-		return scoreTable;
-	}
-	
-	public class PlayerScore
-	{
-		public String username ="";
-		public int win = 0;
-		public int lost = 0;
-	}
-	*/
 }

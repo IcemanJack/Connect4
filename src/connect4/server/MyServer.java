@@ -2,7 +2,9 @@ package connect4.server;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.sf.lipermi.net.IServerListener;
 
@@ -11,74 +13,85 @@ import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Server;
 
-/* TODO
- * Add support for more than 2 player
- * 
- */
-
 public class MyServer extends Server implements IMyServer
 {
 	static private int serverPort = 12345;
 	
 	private IModel model;
 	private CallHandler callHandler = new CallHandler();
+
+	private Map<String, String> users = Collections.synchronizedMap(new TreeMap<String, String>());
+	private String newClientID;
 	
 	MyServer()
 	{
 		model = new Model();
-		initializeDatabase();
 		initializeGame();
+		startDatabase();
 	}
 
 	MyServer(int columns, int rows, int connectToWin)
 	{
 		model = new Model(columns, rows, connectToWin);
-		initializeDatabase();
 		initializeGame();
+		model.connectToDatabase();
+		startDatabase();
 	}
 	
-	private void initializeDatabase()
+	private void startDatabase()
 	{
-		String message = "";
-		try
+		if(!model.connectToDatabase())
 		{
-			model.connectToDatabase();
-		}
-		catch (SQLException e)
-		{
-			message = e.getMessage();
-		}
-		catch (ClassNotFoundException e)
-		{
-			message += e.getMessage();	
-		}
-		if(message.isEmpty())
-		{
-			System.out.println("Impossible to connect to the database" +
-					message + "\nFalling back on mock database.");
+			System.out.println("Unable to connect to database...\n" +
+					"Falling back on mock");
 			model.fallBackOnMock();
 		}
 	}
-
+	
 	@Override
-	public synchronized Status registerAsPlayer(String username, IModelListener client)
-	{
+	public synchronized Status registerAsPlayer(String name, IModelListener client)
+	{		
 		if(!model.playerAvailable())
 		{
 			return Status.GAME_FULL;
 		}
-		
 		// will return incremented one if already in use
-		username = model.addClient(username, client);
+		name = model.addClient(name, client);
+		
+		// to handle unexpected disconnects
+		if(!newClientID.isEmpty())
+		{
+			users.put(newClientID, name);
+			System.out.println(newClientID + " " + name);
+		}
+		
 		model.initializeClientBoard(client);
-		model.updateClientUsername(username, client);
+		model.updateClientUsername(name, client);
 		
 		// last player starts
-		model.setCurrentPlayer(username);
+		model.setCurrentPlayer(name);
 		model.updateClientsCurrentPlayer();
 		
 		return Status.OPERATION_DONE;
 	}
+	
+	@Override
+	public Status registerAsSpectator(IModelListener client)
+	{
+		String name = model.addClient("Spectator", client);
+		
+		if(!newClientID.isEmpty())
+		{
+			users.put(newClientID, name);
+			System.out.println(newClientID + " " + name);
+		}
+		
+		model.initializeClientBoard(client);
+		model.updateClientUsername(name, client);
+		model.updateClientsCurrentPlayer();
+		return Status.OPERATION_DONE;
+	}
+	
 	@Override
 	public synchronized Status unregisterUser(String username) 
 	{
@@ -89,16 +102,6 @@ public class MyServer extends Server implements IMyServer
 			return Status.YOU_LOOSE;
 		}
 		model.removeClient(username);
-		return Status.OPERATION_DONE;
-	}
-	
-	@Override
-	public Status registerAsSpectator(IModelListener client)
-	{
-		String username = model.addClient("Spectator", client);
-		model.initializeClientBoard(client);
-		model.updateClientUsername(username, client);
-		model.updateClientsCurrentPlayer();
 		return Status.OPERATION_DONE;
 	}
 	
@@ -154,7 +157,6 @@ public class MyServer extends Server implements IMyServer
 			System.out.println("Server failed to start");
 		}
 		System.out.println("Server ready");
-		model.makeNewBoard();
 	}
 	
 	private boolean startServer()
@@ -163,7 +165,7 @@ public class MyServer extends Server implements IMyServer
 		{
 			callHandler.registerGlobal(IMyServer.class, this);
 			this.bind(serverPort, callHandler);
-			// will be auto-called by RMI
+			// will be auto-called by RMI on new client
 			this.addServerListener(new ServListener());
 			return true;
 		} 
@@ -181,15 +183,18 @@ public class MyServer extends Server implements IMyServer
 	private class ServListener implements IServerListener
 	{
 		@Override
-		public void clientConnected(Socket socket) 
+		public synchronized void clientConnected(Socket socket) 
 		{
-			System.out.println("Client connected: " + socket.getInetAddress());
+			MyServer.this.newClientID = socket.getInetAddress() + ":" + socket.getPort();
 		}
 		
 		@Override
-		public void clientDisconnected(Socket socket) 
+		public synchronized void clientDisconnected(Socket socket) 
 		{
-			System.out.println("Client disconnected: " + socket.getInetAddress());
+			String client = socket.getInetAddress() + ":" + socket.getPort();
+			MyServer.this.unregisterUser(users.get(client));
+			MyServer.this.users.remove(client);
+			System.out.println("Client disconnected: " + client);
 		}
 	}
 }

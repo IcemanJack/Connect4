@@ -33,6 +33,7 @@ public class ClientController
 		
 		makeCustomView();
 		startClient();
+		System.out.println("Client started");
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -62,9 +63,6 @@ public class ClientController
 	 */
 	public void quitTheGame()
 	{
-		// TODO ask Tiger:
-		// If its a null will freeze the window.
-		disconnectClient();
 		System.exit(0);
 	}
 	
@@ -138,19 +136,6 @@ public class ClientController
 		else
 		{
 			userInterface.alertMessage(serverResponse.getDescription());
-		}
-	}
-	
-	private void disconnectClient()
-	{
-		server.unregisterUser(username);
-		try 
-		{
-			client.close();
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
 		}
 	}
 }
