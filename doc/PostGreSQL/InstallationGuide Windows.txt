@@ -27,8 +27,9 @@ Creating the DB
 	
 *******************************************************************************
 Connect the DB to Eclipse
-
-	Download the driver: http://jdbc.postgresql.org/download.html   JDBC41
-	Include the lib and make sure it have been added in the Classpath
-	SHOULD BE INCLUDED WITH THE SYNC
+	Download the driver: http://jdbc.postgresql.org/download.html
+		Java 7: postgresql-9.3-1100.jdbc41.jar
+		Java 6: postgresql-9.3-1100.jdbc4.jar
+	Include the jar to buildPath
+	Make sure it have been added in the Classpath
 *******************************************************************************
