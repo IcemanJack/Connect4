@@ -144,7 +144,6 @@ public class Database implements IDatabase
 			state.setInt(2, user.getScore());
 			state.executeUpdate();
 			state.close();
-
         }
         catch(PSQLException e)
         {
@@ -269,8 +268,12 @@ public class Database implements IDatabase
 		}
 		return usersCount;
 	}
-	@Override
-	public void addGame(User player1, User player2,
+	
+	/* Not used
+	 * If in future we want to store all the games that has been played.
+	 */
+	@SuppressWarnings("unused")
+	private void addGame(User player1, User player2,
 			User winner, User loser, boolean isNull) throws SQLException 
 	{	
 			PreparedStatement state = connection.prepareStatement("INSERT INTO Game"

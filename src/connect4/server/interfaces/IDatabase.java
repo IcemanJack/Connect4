@@ -18,8 +18,6 @@ public interface IDatabase
 	public void removeUser(String username) throws SQLException, UserIsNotFound;
 	
 	public void updateUserScore(User user, int score) throws SQLException, UserIsNotFound;
-	public void addGame(User player1, User player2,
-			User winner, User loser, boolean isNull) throws SQLException;
 	
 	public boolean containsUser(String username) throws SQLException;
 	public int getPlayerScore(User player) throws SQLException, UserIsNotFound;

@@ -207,8 +207,11 @@ public class MockDatabase implements IDatabase
 	    }
 	}
 
-	@Override
-	public void addGame(User player1, User player2, User winner, User loser,
+	/* Not used
+	 * If in future we want to store all the games that has been played.
+	 */
+	@SuppressWarnings("unused")
+	private void addGame(User player1, User player2, User winner, User loser,
 			boolean isNull) throws SQLException 
 	{
 		System.out.println("Mock called to register game");
