@@ -4,38 +4,37 @@ import connect4.local.Model;
 
 public class Computer
 {
-	Controller controller;
-	Model model;
+	private Controller controller;
+	private Model model;
 	
-	public Computer(Controller controller, Model model, int column, int mostLowRow)
+	public Computer(final Controller controller, final Model model, final int column, final int lowestRow)
 	{
 		this.controller = controller;
 		this.model = model;
 
-		computerPlay(column, mostLowRow);
+		computerPlay(column, lowestRow);
 	}
 	
-	private boolean computerPlay(int column, int mostLowRow)
+	private boolean computerPlay(int column, int lowestRow)
 	{
 		for (int i = 0; i < model.columns; i++)
 		{
 			for (int j = 0; j < model.rows; j++)
 			{
-				if (playWhenRowEqualZero(mostLowRow) || playWhen3CaseType(column, mostLowRow, i, j))
+				if (playWhenRowEqualZero(lowestRow) || playWhenThreeCaseType(column, lowestRow, i, j))
 				{
 					return true;
 				}
 			}
 		}
-		
-		play(mostLowRow, column);
+		play(lowestRow, column);
 		return false;
 	}
 	
-	private void play(int mostLowRow, int column)
+	private void play(final int lowestRow,final int column)
 	{
 		setCurrentPlayerToNextPlayer();
-		controller.play(mostLowRow, column);
+		controller.play(lowestRow, column);
 		setCurrentPlayerToNextPlayer();
 	}
 	
@@ -44,9 +43,9 @@ public class Computer
 		model.setCurrentPlayer(model.getNextPlayer());
 	}
 	
-	private boolean playWhenRowEqualZero(int mostLowRow)
+	private boolean playWhenRowEqualZero(final int lowestRow)
 	{
-		if (mostLowRow == 0)
+		if (lowestRow == 0)
 		{
 			for (int i = 0; i < model.columns; i++)
 			{
@@ -57,40 +56,38 @@ public class Computer
 				}
 			}
 		}
+		
 		return false;
 	}
 	
-	private boolean playWhen3CaseType(int column, int mostLowRow, int posX, int posY)
+	private boolean playWhenThreeCaseType(final int column, final int lowestRow, final int posX, final int posY)
 	{
 		if (model.isPositionMakeWinning(posX, posY) && isAvailable(posX, posY))
 		{
 			if (posY != 5 && isAvailable(posX, posY + 1))
 			{
-				playIfNumberIsImpair((model.getColumnLowestFreeRow(posX) - posY), column, mostLowRow, posX, posY);
+				playIfNumberIsNotPair((model.getColumnLowestFreeRow(posX) - posY), column, lowestRow, posX, posY);
 			}
 			else
 			{
 				play(posY, posX);
 			}
-			
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean isAvailable(int column, int row)
+	private boolean isAvailable(final int column,final int row)
 	{
 		return model.isAvailable(column, row);
 	}
 	
-	private void playIfNumberIsImpair(int number, int column, int mostLowRow, int posX, int posY)
+	private void playIfNumberIsNotPair(final int number, final int column, final int lowestRow, final int posX, final int posY)
 	{
-		if (number % 2 == 1)
+		if ((number % 2) == 1)
 		{
-			play(mostLowRow, column);
+			play(lowestRow, column);
 		}
-		
-		//Attaque diagonal
 		play(posY + 1, posX);
 	}
 }

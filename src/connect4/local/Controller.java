@@ -5,10 +5,13 @@ public class Controller
 	private View view;
 	private Model model;
 	
+	
 	public Controller()
 	{
 		model = new Model();
+		
 		initializeGame(model);
+		
 	}
 	public Controller(final int columns, final int rows, final int winningAlignTokenNumber)
 	{
@@ -97,5 +100,18 @@ public class Controller
 	public boolean modelAtPositionIsAvailable(int column, int mostLowRow)
 	{
 		return model.isAvailable(column, mostLowRow);
+	}
+	public CaseType[][] testing()
+	{
+		CaseType[][] testBoard = new CaseType[6][7];
+		for(int i = 0 ; i < 5 ; i++)
+		{
+			for(int j = 0 ; j < 6 ; j++)
+			{
+				testBoard[i][j] = this.model.board[i][j];								
+			}
+		}
+		
+		return testBoard;
 	}
 }
