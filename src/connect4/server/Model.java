@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import connect4.client.interfaces.GameListener;
 import connect4.server.database.Database;
 import connect4.server.database.MockDatabase;
+import connect4.server.database.MockDatabase.NoUsers;
 import connect4.server.enums.CaseType;
 import connect4.server.interfaces.IDatabase;
 import connect4.server.interfaces.IModel;
@@ -54,6 +55,7 @@ public class Model implements IModel
 		makeNewBoard();
 	}
 	
+	@Override
 	public boolean connectToDatabase()
 	{
 		try
@@ -78,9 +80,29 @@ public class Model implements IModel
 		return true;
 	}
 	
+	@Override
 	public void fallBackOnMock()
 	{
 		database = new MockDatabase();
+	}
+	
+	@Override
+	public User[] getScoreTable()
+	{
+		User[] usrs = null;
+		try
+		{
+			usrs = database.getScoreTable();
+		}
+		catch (SQLException e)
+		{
+			System.err.println(e.getMessage());
+		}
+		catch (NoUsers e)
+		{
+			System.err.println(e.getMessage());
+		}
+		return usrs;
 	}
 	
 	@Override

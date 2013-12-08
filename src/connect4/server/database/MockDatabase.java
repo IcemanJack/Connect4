@@ -18,8 +18,8 @@ public class MockDatabase implements IDatabase
 	{
 		IDatabase db = new MockDatabase();
 		
-		User u1 = new User("1");
-		User u2 = new User("1");
+		User u1 = new User("user");
+		User u2 = new User("user");
 		try
 		{
 			db.addUser(u1);
@@ -60,6 +60,18 @@ public class MockDatabase implements IDatabase
 			System.out.println(db.getTableDescription(Tables.usr));
 		} catch (TableDoesNotExist e) {
 			System.err.println(e.getMessage());
+		}
+		
+		User[] users = null;
+		try {
+			users = db.getScoreTable();
+		}
+		catch (SQLException e){System.err.println(e.getMessage());}
+		catch (NoUsers e){System.err.println(e.getMessage());}
+		
+		for(User user: users)
+		{
+			System.out.println(user.getName()+" "+user.getScore());
 		}
 	}
 	
@@ -139,6 +151,19 @@ public class MockDatabase implements IDatabase
 		throw new UserIsNotFound();
 	}
 	
+	@Override
+	public User[] getScoreTable() throws NoUsers
+	{
+		User[] usrs = new User[users.size()];
+		int count = 0;
+		for(User user: users.values())
+		{
+			usrs[count] = user;
+			count++;
+		}
+		return usrs;
+	}
+	
 	public boolean containsUser(String username)
 	{
 		for(String current: users.keySet())
@@ -180,11 +205,11 @@ public class MockDatabase implements IDatabase
 	    }
 	}
 	
-	public class NoUsersExits extends Exception
+	public class NoUsers extends Exception
 	{
 		private static final long serialVersionUID = -40295224831334873L;
 
-		public NoUsersExits() 
+		public NoUsers() 
 	    {
 	        super("There is no users in the table.");
 	    }

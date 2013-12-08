@@ -20,7 +20,9 @@ public class LoginView implements GenericUI
 	private JLabel titleLabel;
 	private JLabel userLabel;
 	private JTextField userText;
+	
 	private JButton loginButton;
+	private JButton scoresButton;
 	
 	ClientController controller;
 	
@@ -35,11 +37,10 @@ public class LoginView implements GenericUI
 		mainPanel = new JPanel();
 		placeComponents();
 		mainFrame.add(mainPanel);
-
-		mainFrame.setVisible(true);
 		
 		mainFrame.setLocationRelativeTo(null);
 		mainFrame.setVisible(true);
+		mainFrame.setResizable(false);
 	}
 
 	public void placeComponents()
@@ -56,8 +57,13 @@ public class LoginView implements GenericUI
 
 		userText = new JTextField(20);
 		userText.setBounds(100, 45, 180, 25);
-		userText.setText("Horse");
+		userText.setText("Default");
 		mainPanel.add(userText);
+		
+		scoresButton = new JButton("Consult scores");
+		scoresButton.addActionListener(scoresButtonListener);
+		scoresButton.setBounds(30, 83, 150, 25);
+		mainPanel.add(scoresButton);
 
 		loginButton = new JButton("play");
 		loginButton.addActionListener(loginButtonListener);
@@ -65,12 +71,28 @@ public class LoginView implements GenericUI
 		mainPanel.add(loginButton);
 	}
 	
+	private ActionListener scoresButtonListener = new ActionListener()
+	{
+		@Override
+		public void actionPerformed(ActionEvent e) 
+		{
+			controller.showScoresTable();
+		}
+	};
+	
 	private ActionListener loginButtonListener = new ActionListener()
 	{
 		@Override
 		public void actionPerformed(ActionEvent e) 
 		{
-			controller.loggedIn(userText.getText());
+			if(userText.getText().isEmpty())
+			{
+				alertMessage("You can't have an empty username...");
+			}
+			else
+			{
+				controller.loggedIn(userText.getText());
+			}
 		}
 	};
 

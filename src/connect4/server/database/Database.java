@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.postgresql.util.PSQLException;
+
+import connect4.server.database.MockDatabase.NoUsers;
 import connect4.server.database.MockDatabase.TableDoesNotExist;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
 import connect4.server.database.MockDatabase.UserIsNotFound;
@@ -36,10 +38,24 @@ public class Database implements IDatabase
 			System.out.println("Failed to connect\n"+e.getMessage()+" "+e.getSQLState());
 		}
 		
+		User[] users = null;
+		try {
+			users = db.getScoreTable();
+		}
+		catch (SQLException e){System.err.println(e.getMessage());}
+		catch (NoUsers e){System.err.println(e.getMessage());}
+		
+		for(User user: users)
+		{
+			System.out.println(user.getName() + " " + user.getScore());
+		}
+		
+		
 		try {System.out.println(db.getTableDescription(Tables.usr));} 
 		catch (TableDoesNotExist e1){ e1.printStackTrace();}
 		
 		User u1 = new User("Peter");
+		u1.setScore(1000);
 		
 		try{db.addUser(u1);}
 		catch (SQLException e){System.err.println(e.getMessage());}
@@ -188,11 +204,67 @@ public class Database implements IDatabase
 	        		return true;
 	        	}
 	        }
+	        result.close();
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	@Override
+	public User[] getScoreTable() throws SQLException
+	{
+		int usersCount = countNumberOfPlayer();
+		User[] users = new User[usersCount];
+		try
+		{
+			ResultSet result = connection.prepareStatement
+					("SELECT * FROM usr ORDER BY score DESC").executeQuery();
+			int counter = 0;
+			User user;
+			while(result.next())
+			{
+				user = new User(result.getString("name"));
+				user.setScore(result.getInt("score"));
+				try
+				{
+					users[counter] = user;
+				}
+				catch(IndexOutOfBoundsException e)
+				{
+					System.err.println(e.getMessage());
+					break;
+				}	
+				counter++;
+			}
+			result.close();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return users;
+	}
+	
+	private int countNumberOfPlayer()
+	{
+		int usersCount = -1;
+		try
+		{
+			ResultSet result = connection.createStatement().executeQuery
+					("SELECT count(1) FROM usr;");
+	        if (result.next())
+	        {
+	        	usersCount = result.getInt(1);
+	        }
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return usersCount;
+		
 	}
 }

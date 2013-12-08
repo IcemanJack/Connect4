@@ -14,10 +14,9 @@ import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
 
-/* TODO
- * Make view with console log, so we print server responses directly.
- * Add extends client?
- */
+import connect4.client.views.ScoresView;
+import connect4.server.objects.User;
+
 public class ClientController
 {
 	private Client client;
@@ -26,11 +25,11 @@ public class ClientController
 	
 	private String serverIP;
 	private int serverPort;
+	String username;
+
 	private GameListener gameListener;
 	private GameUI gameInterface;
 	private GenericUI loginInterface;
-	
-	String username;
 	
 	public ClientController()
 	{
@@ -40,12 +39,26 @@ public class ClientController
 		makeLoginView();
 		startClient();
 		
+		// TESTS
 //		makeGameView();
 //		gameListener = (GameListener) gameInterface;
 //		gameListener.initializeView(7, 6);
 //		gameInterface.updateUsername("cheval");
 //		gameListener.updateCurrentPlayer("playing");
 //		System.out.println("Client started");
+		
+//		User[] users = new User[3];
+//		User u1 = new User("Blah");
+//		u1.setScore(1000);
+//		users[0] = u1;
+//		User u2 = new User("cheval");
+//		u2.setScore(200);
+//		users[1] = u2;
+//		User u3 = new User("raw");
+//		u3.setScore(200);
+//		users[2] = u3;
+//		
+//		new ScoresView(users);
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -54,7 +67,8 @@ public class ClientController
 		this.serverPort = serverPort;
 		this.username = username;
 		
-		// TODO
+		makeLoginView();
+		startClient();
 	}
 	
 	public void makeMove(final int row, final int column)
@@ -108,6 +122,11 @@ public class ClientController
 		{
 			handleServerResponse(response, gameInterface);
 		}
+	}
+	
+	public void showScoresTable()
+	{
+		new ScoresView(server.getScoreTable());
 	}
 	
 	private void makeLoginView()

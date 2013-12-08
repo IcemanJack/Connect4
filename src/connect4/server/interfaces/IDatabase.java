@@ -2,7 +2,7 @@ package connect4.server.interfaces;
 
 import java.sql.SQLException;
 
-import connect4.server.database.MockDatabase;
+import connect4.server.database.MockDatabase.NoUsers;
 import connect4.server.database.MockDatabase.TableDoesNotExist;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
 import connect4.server.database.MockDatabase.UserIsNotFound;
@@ -22,7 +22,5 @@ public interface IDatabase
 	public boolean containsUser(String username) throws SQLException;
 	public int getPlayerScore(User player) throws SQLException, UserIsNotFound;
 	public String getTableDescription(Tables table) throws SQLException, TableDoesNotExist;
-//	public User getUserByName(String username) throws SQLException, UserIsNotFound;
-//	public String getListOfUsers() throws SQLException;
-//	public IModelListener[] getClientsListeners();
+	public User[] getScoreTable() throws SQLException, NoUsers;
 }

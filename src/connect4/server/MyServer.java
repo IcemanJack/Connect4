@@ -12,6 +12,7 @@ import connect4.client.interfaces.GameListener;
 import connect4.server.enums.Status;
 import connect4.server.interfaces.IModel;
 import connect4.server.interfaces.IMyServer;
+import connect4.server.objects.User;
 import connect4.server.objects.User.UserType;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
@@ -96,16 +97,6 @@ public class MyServer extends Server implements IMyServer
 		return Status.OPERATION_DONE;
 	}
 	
-	private synchronized void unregisterUser(String username) 
-	{
-		if(model.isPlaying(username))
-		{
-			model.notifyOfEndOfTheGame(true);
-			model.removeClient(username);
-		}
-		model.removeClient(username);
-	}
-	
 	@Override
 	public synchronized Status makeMove(int column, int row, String player)
 	{
@@ -151,6 +142,22 @@ public class MyServer extends Server implements IMyServer
 		return Status.OPERATION_DONE;
 	}
 
+
+	@Override
+	public User[] getScoreTable()
+	{
+		return model.getScoreTable();
+	}
+	
+	private synchronized void unregisterUser(String username) 
+	{
+		if(model.isPlaying(username))
+		{
+			model.notifyOfEndOfTheGame(true);
+			model.removeClient(username);
+		}
+		model.removeClient(username);
+	}
 	
 	private void initializeGame()
 	{

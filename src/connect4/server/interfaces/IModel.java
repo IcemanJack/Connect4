@@ -1,12 +1,14 @@
 package connect4.server.interfaces;
 
 import connect4.client.interfaces.GameListener;
+import connect4.server.objects.User;
 
 // used by server
 public interface IModel 
 {
 	public boolean connectToDatabase();
 	public void fallBackOnMock();
+	public User[] getScoreTable();
 	//public void containsUserInDataBase();
 	//public void addUserToDataBase();
 	//public void updateUserScoreInDatabase();

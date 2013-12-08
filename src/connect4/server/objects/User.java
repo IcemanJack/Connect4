@@ -1,9 +1,15 @@
 package connect4.server.objects;
 
+import java.io.Serializable;
+
 import connect4.client.interfaces.GameListener;
 
-public class User 
+public class User implements Serializable
 {
+	/* Used in getScoreTable().
+	 */
+	private static final long serialVersionUID = 3362806013219423936L;
+	
 	private String name;
 	private GameListener listener;
 	private UserType type;
