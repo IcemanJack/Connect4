@@ -1,6 +1,7 @@
 package connect4.server.interfaces;
 
 import connect4.client.interfaces.GameListener;
+import connect4.server.enums.GameResult;
 import connect4.server.objects.User;
 
 // used by server
@@ -8,10 +9,8 @@ public interface IModel
 {
 	public boolean connectToDatabase();
 	public void fallBackOnMock();
-	public User[] getScoreTable();
-	//public void containsUserInDataBase();
-	//public void addUserToDataBase();
-	//public void updateUserScoreInDatabase();
+	public User[] getScoreTableFromDatabase();
+	public void updatePlayersScoresInDatabase(String username, GameResult result);
 	
 	public String validateUsername(String username);
 	public void addClient(String player, GameListener client);
@@ -21,7 +20,7 @@ public interface IModel
 	
 	void updateClientsCurrentPlayer();
 	void updateClientsBoardCase(int column, int row, String player);
-	void notifyOfEndOfTheGame(boolean isNull);
+	void notifyOfEndOfTheGame(GameResult result);
 	
 	boolean makeMove(int column, int row, String player);
 	

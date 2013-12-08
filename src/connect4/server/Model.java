@@ -13,7 +13,10 @@ import connect4.client.interfaces.GameListener;
 import connect4.server.database.Database;
 import connect4.server.database.MockDatabase;
 import connect4.server.database.MockDatabase.NoUsers;
+import connect4.server.database.MockDatabase.UserAlreadyExists;
+import connect4.server.database.MockDatabase.UserIsNotFound;
 import connect4.server.enums.CaseType;
+import connect4.server.enums.GameResult;
 import connect4.server.interfaces.IDatabase;
 import connect4.server.interfaces.IModel;
 import connect4.server.objects.User;
@@ -87,7 +90,7 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public User[] getScoreTable()
+	public User[] getScoreTableFromDatabase()
 	{
 		User[] usrs = null;
 		try
@@ -103,6 +106,49 @@ public class Model implements IModel
 			System.err.println(e.getMessage());
 		}
 		return usrs;
+	}
+	
+	@Override
+	public void updatePlayersScoresInDatabase(String username, GameResult result)
+	{
+		User current = new User(username);		
+		User opponent = new User(getOpponent(username));
+		
+		if(!containsPlayerInDatabase(current.getName()))
+		{
+			addPlayerToDatabase(current.getName());
+		}
+		
+		if(!containsPlayerInDatabase(opponent.getName()))
+		{
+			addPlayerToDatabase(opponent.getName());
+		}
+		
+		try
+		{
+			database.updateUserScore(current, result.getScore());
+			
+			if(result == GameResult.WIN)
+			{
+				database.updateUserScore(opponent, GameResult.LOSE.getScore());
+			}
+			else if(result == GameResult.LOSE)
+			{
+				database.updateUserScore(opponent, GameResult.WIN.getScore());
+			}
+			else
+			{
+				database.updateUserScore(opponent, GameResult.NULL.getScore());
+			}
+		}
+		catch (SQLException e)
+		{
+			System.err.println(e.getMessage());
+		}
+		catch (UserIsNotFound e)
+		{
+			System.err.println(e.getMessage());
+		}
 	}
 	
 	@Override
@@ -123,6 +169,11 @@ public class Model implements IModel
 		{
 			addNewPlayer(username);
 			type = UserType.PLAYER;
+			
+			if(!containsPlayerInDatabase(username))
+			{
+				addPlayerToDatabase(username);
+			}
 		}
 		
 		User user = new User(username, client, type);
@@ -178,13 +229,22 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void notifyOfEndOfTheGame(boolean isNull)
+	public void notifyOfEndOfTheGame(GameResult result)
 	{
 		String winner = "";
-		if(!isNull)
+		if(result == GameResult.WIN)
 		{
-			winner = currentPlayer;
+			winner = this.currentPlayer;
 		}
+		if(result == GameResult.LOSE)
+		{
+			winner = this.getOpponent(this.currentPlayer);
+		}
+		else
+		{
+			winner = "No one";
+		}
+		
 		GameListener[] listeners = getClientsListeners();
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
@@ -336,6 +396,38 @@ public class Model implements IModel
 		return checkIfWinningCases(winningCases);
 	}
 	
+	private boolean containsPlayerInDatabase(String username)
+	{
+		try
+		{
+			if(database.containsUser(username))
+			{
+				return true;
+			}
+		}
+		catch (SQLException e)
+		{
+			System.err.println(e.getMessage());
+		}
+		return false;
+	}
+	
+	private void addPlayerToDatabase(String username)
+	{
+		try
+		{
+			database.addUser(new User(username));
+		}
+		catch (SQLException e)
+		{
+			System.err.println(e.getMessage());
+		}
+		catch (UserAlreadyExists e)
+		{
+			System.err.println(e.getMessage());
+		}
+	}
+	
 	private GameListener[] getClientsListeners()
 	{
 		GameListener[] listeners =  new GameListener[users.size()];
@@ -403,6 +495,19 @@ public class Model implements IModel
 		{
 			player2 = "";
 		}
+	}
+	
+	private String getOpponent(String player)
+	{
+		if(player1.equals(player))
+		{
+			return player2;
+		}
+		else if(player2.equals(player))
+		{
+			return player1;
+		}
+		return null;
 	}
 	
 	private CaseType getPlayerCaseType(String player)

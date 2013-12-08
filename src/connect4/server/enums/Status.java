@@ -19,7 +19,7 @@ public enum Status
 	private final int code;
 	private final String description;
 	
-	 Status(int code, String description)
+	private Status(int code, String description)
 	{
 	    this.code = code;
 	    this.description = description;

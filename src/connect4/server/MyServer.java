@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import net.sf.lipermi.net.IServerListener;
 
 import connect4.client.interfaces.GameListener;
+import connect4.server.enums.GameResult;
 import connect4.server.enums.Status;
 import connect4.server.interfaces.IModel;
 import connect4.server.interfaces.IMyServer;
@@ -98,9 +99,9 @@ public class MyServer extends Server implements IMyServer
 	}
 	
 	@Override
-	public synchronized Status makeMove(int column, int row, String player)
+	public synchronized Status makeMove(int column, int row, String username)
 	{
-		if(!model.isPlaying(player))
+		if(!model.isPlaying(username))
 		{
 			return Status.USER_NOT_PLAYING;
 		}
@@ -108,13 +109,14 @@ public class MyServer extends Server implements IMyServer
 		{
 			return Status.WAITING_FOR_SECOND_PLAYER;
 		}
-		else if(!model.getCurrentPlayer().equals(player))
+		else if(!model.getCurrentPlayer().equals(username))
 		{
 			return Status.NOT_YOUR_TURN;
 		}
 		else if(model.floorFull())
 		{
-			model.notifyOfEndOfTheGame(true);
+			model.updatePlayersScoresInDatabase(username, GameResult.NULL);
+			model.notifyOfEndOfTheGame(GameResult.NULL);
 			return Status.ITS_A_NULL;
 		}
 		
@@ -123,16 +125,17 @@ public class MyServer extends Server implements IMyServer
 		{
 			return Status.NO_AVAILABLE_POSITION;
 		}
-		else if(!model.makeMove(column, mostLowRow, player))
+		else if(!model.makeMove(column, mostLowRow, username))
 		{
 			return Status.UNKNOWN;
 		}
 		
-		model.updateClientsBoardCase(column, mostLowRow, player);
+		model.updateClientsBoardCase(column, mostLowRow, username);
 		
 		if(model.positionMakeWinning(column, mostLowRow))
 		{
-			model.notifyOfEndOfTheGame(false);
+			model.updatePlayersScoresInDatabase(username, GameResult.WIN);
+			model.notifyOfEndOfTheGame(GameResult.WIN);
 			return Status.YOU_WON;
 		}
 		
@@ -142,18 +145,18 @@ public class MyServer extends Server implements IMyServer
 		return Status.OPERATION_DONE;
 	}
 
-
 	@Override
 	public User[] getScoreTable()
 	{
-		return model.getScoreTable();
+		return model.getScoreTableFromDatabase();
 	}
 	
 	private synchronized void unregisterUser(String username) 
 	{
 		if(model.isPlaying(username))
 		{
-			model.notifyOfEndOfTheGame(true);
+			model.updatePlayersScoresInDatabase(username, GameResult.LOSE);
+			model.notifyOfEndOfTheGame(GameResult.LOSE);
 			model.removeClient(username);
 		}
 		model.removeClient(username);

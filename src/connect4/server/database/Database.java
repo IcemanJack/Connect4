@@ -5,7 +5,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -204,7 +203,7 @@ public class Database implements IDatabase
 			PreparedStatement state = connection.prepareStatement("SELECT name FROM usr WHERE name = ?");
 			state.setString(1, username);
 	        state.execute();
-	        if(state.getMetaData().getColumnCount()>0)
+	        if(state.getMetaData().getColumnCount() > 0)
 	        {
 	        	return true;
 	        }
@@ -226,22 +225,21 @@ public class Database implements IDatabase
 		{
 			ResultSet result = connection.prepareStatement
 					("SELECT * FROM usr ORDER BY score DESC").executeQuery();
-			int counter = 0;
 			User user;
 			while(result.next())
 			{
 				user = new User(result.getString("name"));
 				user.setScore(result.getInt("score"));
+				System.out.println(result.getString("name"));
 				try
 				{
-					users[counter] = user;
+					users[result.getRow() - 1] = user;
 				}
 				catch(IndexOutOfBoundsException e)
 				{
-					System.err.println(e.getMessage());
+					e.printStackTrace();
 					break;
-				}	
-				counter++;
+				}
 			}
 			result.close();
 		}
@@ -252,22 +250,24 @@ public class Database implements IDatabase
 		return users;
 	}
 	
-	private int countNumberOfPlayer()
-	{
-		int usersCount = -1;
-		try
-		{
-			ResultSet result = connection.createStatement().executeQuery
-					("SELECT * FROM usr;");
-			ResultSetMetaData metadata = result.getMetaData();
-			usersCount = metadata.getColumnCount();
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		return usersCount;
-	}
+    private int countNumberOfPlayer()
+    {
+    	int usersCount = -1;
+    	try
+    	{
+    		ResultSet result = connection.createStatement().executeQuery
+                        ("SELECT count(1) FROM usr;");
+    		if (result.next())
+    		{
+    			usersCount = result.getInt(1);
+    		}
+        }
+        catch (Exception e)
+        {
+                e.printStackTrace();
+        }
+        return usersCount;
+    }
 	
 	/* Not used
 	 * If in future we want to store all the games that has been played.
