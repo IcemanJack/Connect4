@@ -1,5 +1,6 @@
-package connect4.local;
+package connect4.server.ai;
 
+import connect4.local.Controller;
 import connect4.local.Model;
 
 public class Computer

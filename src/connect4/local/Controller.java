@@ -1,5 +1,7 @@
 package connect4.local;
 
+import connect4.server.ai.Computer;
+
 public class Controller 
 {
 	private View view;
