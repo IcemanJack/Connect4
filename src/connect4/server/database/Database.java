@@ -5,7 +5,11 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.postgresql.util.PSQLException;
 
@@ -20,9 +24,10 @@ import connect4.server.objects.User;
 
 public class Database implements IDatabase
 {
-	private static String url = "jdbc:postgresql://localhost:5432/postgres";
-	private static String user = "postgres";
-	private static String passwd = "mypassword";
+	private final static String url = "jdbc:postgresql://localhost:5432/postgres";
+	private final static String user = "postgres";
+	private final static String passwd = "mypassword";
+	private final String classForName = "org.postgresql.Driver";
 	private static Connection connection;
 
 	// Tests
@@ -35,13 +40,11 @@ public class Database implements IDatabase
 		}
 		catch(SQLException e)
 		{
-			System.out.println("Failed to connect\n"+e.getMessage()+" "+e.getSQLState());
+			System.err.println("Failed to connect\n"+e.getMessage()+" "+e.getSQLState());
 		}
 		
 		User[] users = null;
-		try {
-			users = db.getScoreTable();
-		}
+		try {users = db.getScoreTable();}
 		catch (SQLException e){System.err.println(e.getMessage());}
 		catch (NoUsers e){System.err.println(e.getMessage());}
 		
@@ -89,13 +92,14 @@ public class Database implements IDatabase
         {
             System.out.println(rs.getString(1));
         }
+        rs.close();
 	}
 	
 	@Override
 	public void openConnection() throws SQLException, ClassNotFoundException 
 	{
 		Database.connection = DriverManager.getConnection(url, user, passwd);
-		Class.forName("org.postgresql.Driver");
+		Class.forName(classForName);
 		System.out.println("DRIVER OK ! ");
 		System.out.println("Connection effective !");
 	}
@@ -107,7 +111,7 @@ public class Database implements IDatabase
 	}
 	
 	@Override
-	public String getTableDescription(Tables table) throws SQLException
+	public String getTableDescription(final Tables table) throws SQLException
 	{
 		String output = "No table " + table;
 		DatabaseMetaData dbmd = connection.getMetaData();
@@ -125,11 +129,12 @@ public class Database implements IDatabase
 	        }	
 			output += "\n---------\n";
 		}
+		rs.close();
 		return output;
 	}
 	
 	@Override
-	public void addUser(User user) throws SQLException 
+	public void addUser(final User user) throws SQLException 
 	{
         try
         {
@@ -138,6 +143,7 @@ public class Database implements IDatabase
 			state.setString(1, user.getName());
 			state.setInt(2, user.getScore());
 			state.executeUpdate();
+			state.close();
 
         }
         catch(PSQLException e)
@@ -151,7 +157,7 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public void updateUserScore(User user, int score) throws SQLException 
+	public void updateUserScore(final User user, final int score) throws SQLException 
 	{		
 			user.setScore(getPlayerScore(user) + score);
 			PreparedStatement state = connection.prepareStatement
@@ -163,7 +169,7 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public int getPlayerScore(User user) throws SQLException
+	public int getPlayerScore(final User user) throws SQLException
 	{
 		PreparedStatement state = connection.prepareStatement
 				("SELECT score FROM usr WHERE name = ?");
@@ -182,7 +188,7 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public void removeUser(String username) throws SQLException
+	public void removeUser(final String username) throws SQLException
 	{
 		PreparedStatement state = connection.prepareStatement
 				("DELETE FROM usr WHERE name = ?");
@@ -192,19 +198,18 @@ public class Database implements IDatabase
 	}
 
 	@Override
-	public boolean containsUser(String username) throws SQLException
+	public boolean containsUser(final String username) throws SQLException
 	{
 		try
 		{
-			ResultSet result = connection.createStatement().executeQuery("SELECT name FROM usr");
-	        while (result.next())
+			PreparedStatement state = connection.prepareStatement("SELECT name FROM usr WHERE name = ?");
+			state.setString(1, username);
+	        state.execute();
+	        if(state.getMetaData().getColumnCount()>0)
 	        {
-	        	if(result.getString(1).equals(username))
-	        	{
-	        		return true;
-	        	}
+	        	return true;
 	        }
-	        result.close();
+	        state.close();
 		}
 		catch (Exception e)
 		{
@@ -254,17 +259,35 @@ public class Database implements IDatabase
 		try
 		{
 			ResultSet result = connection.createStatement().executeQuery
-					("SELECT count(1) FROM usr;");
-	        if (result.next())
-	        {
-	        	usersCount = result.getInt(1);
-	        }
+					("SELECT * FROM usr;");
+			ResultSetMetaData metadata = result.getMetaData();
+			usersCount = metadata.getColumnCount();
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
 		return usersCount;
-		
+	}
+	@Override
+	public void addGame(User player1, User player2,
+			User winner, User loser, boolean isNull) throws SQLException 
+	{	
+			PreparedStatement state = connection.prepareStatement("INSERT INTO Game"
+					+ "(date, user1, user2, winner, loser, isNull) " +
+					"VALUES"+"(?,?,?,?,?)");
+			
+			DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			Date date = new Date();
+						
+			state.setString(1,dateFormat.format(date.getTime()));
+			state.setString(2, player1.getName());
+			state.setString(3, player2.getName());
+			state.setString(4, winner.getName());
+			state.setString(5, loser.getName());
+			state.setBoolean(6, isNull);
+			state.executeUpdate();
+			
+			state.close();
 	}
 }

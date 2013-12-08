@@ -15,8 +15,8 @@ public class Game
 	
 	public Game(){}
 	
-	public Game(int id, User player1,User player2,
-			User winner , User loser, boolean isNull)
+	public Game(final int id, final User player1, final User player2,
+			final User winner, final User loser, final boolean isNull)
 	{
 		this.id = id;
 		this.player1 = player1;

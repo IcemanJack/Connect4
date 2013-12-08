@@ -27,43 +27,35 @@ public class MockDatabase implements IDatabase
 			// test error
 			db.addUser(u1);
 		}
-		catch (UserAlreadyExists e)
-		{
-			System.err.println(e.getMessage());
-		}
+		catch (UserAlreadyExists e){System.err.println(e.getMessage());}
 		
 		try
 		{
 			db.updateUserScore(u1, 10);
 		}
-		catch (UserIsNotFound e)
-		{
-			e.printStackTrace();
-		}
+		catch (UserIsNotFound e){e.printStackTrace();}
+		
 		try
 		{
 			db.updateUserScore(u1, -1);
 		}
-		catch (UserIsNotFound e)
-		{
-			e.printStackTrace();
-		}
+		catch (UserIsNotFound e){e.printStackTrace();}
+		
 		try
 		{
 			System.out.println(db.getPlayerScore(u1));
 		}
-		catch (UserIsNotFound e)
+		catch (UserIsNotFound e){e.printStackTrace();}
+		
+		try 
 		{
-			e.printStackTrace();
-		}
-		try {
 			System.out.println(db.getTableDescription(Tables.usr));
-		} catch (TableDoesNotExist e) {
-			System.err.println(e.getMessage());
 		}
+		catch (TableDoesNotExist e) {System.err.println(e.getMessage());}
 		
 		User[] users = null;
-		try {
+		try
+		{
 			users = db.getScoreTable();
 		}
 		catch (SQLException e){System.err.println(e.getMessage());}
@@ -76,7 +68,7 @@ public class MockDatabase implements IDatabase
 	}
 	
 	@Override
-	public String getTableDescription(Tables table) 
+	public String getTableDescription(final Tables table) 
 	{
 		String output = "No table " + table;
 		if(table == Tables.usr)
@@ -101,7 +93,7 @@ public class MockDatabase implements IDatabase
 	}
 
 	@Override
-	public void addUser(User user) throws UserAlreadyExists
+	public void addUser(final User user) throws UserAlreadyExists
 	{
 		if(containsUser(user.getName()))
 		{
@@ -111,7 +103,7 @@ public class MockDatabase implements IDatabase
 	}
 	
 	@Override
-	public void removeUser(String username) throws UserIsNotFound
+	public void removeUser(final String username) throws UserIsNotFound
 	{
 		if(!containsUser(username))
 		{
@@ -121,7 +113,7 @@ public class MockDatabase implements IDatabase
 	}
 
 	@Override
-	public void updateUserScore(User user, int points) throws UserIsNotFound
+	public void updateUserScore(final User user, final int points) throws UserIsNotFound
 	{
 		boolean updated = false;
 		for(String current: users.keySet())
@@ -139,7 +131,7 @@ public class MockDatabase implements IDatabase
 	}
 	
 	@Override
-	public int getPlayerScore(User user) throws UserIsNotFound
+	public int getPlayerScore(final User user) throws UserIsNotFound
 	{
 		for(String current: users.keySet())
 		{
@@ -213,5 +205,12 @@ public class MockDatabase implements IDatabase
 	    {
 	        super("There is no users in the table.");
 	    }
+	}
+
+	@Override
+	public void addGame(User player1, User player2, User winner, User loser,
+			boolean isNull) throws SQLException 
+	{
+		System.out.println("Mock called to register game");
 	}
 }
