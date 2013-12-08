@@ -1,5 +1,9 @@
-package connect4.server.database;
+package connect4.server.objects;
 
+
+/* Not used
+ * If in future we want to store all the games that has been played.
+ */
 public class Game 
 {
 	private int id;

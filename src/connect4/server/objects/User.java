@@ -1,11 +1,11 @@
-package connect4.server.database;
+package connect4.server.objects;
 
-import connect4.client.IModelListener;
+import connect4.client.interfaces.GameListener;
 
 public class User 
 {
 	private String name;
-	private IModelListener listener;
+	private GameListener listener;
 	private UserType type;
 	private int score;
 	
@@ -17,7 +17,7 @@ public class User
 	}
 	
 	// MockDabase
-	public User(String name, IModelListener listener, UserType type)
+	public User(String name, GameListener listener, UserType type)
 	{
 		this.name = name;
 		this.listener = listener;
@@ -35,7 +35,7 @@ public class User
 		return name;
 	}
 
-	public IModelListener getListener()
+	public GameListener getListener()
 	{
 		return listener;
 	}

@@ -1,10 +1,13 @@
-package connect4.server.database;
+package connect4.server.interfaces;
 
 import java.sql.SQLException;
 
+import connect4.server.database.MockDatabase;
 import connect4.server.database.MockDatabase.TableDoesNotExist;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
 import connect4.server.database.MockDatabase.UserIsNotFound;
+import connect4.server.enums.Tables;
+import connect4.server.objects.User;
 
 public interface IDatabase
 {

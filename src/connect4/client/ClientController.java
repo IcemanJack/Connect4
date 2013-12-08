@@ -1,9 +1,15 @@
 package connect4.client;
 
 import java.io.IOException;
-import connect4.server.IMyServer;
-import connect4.server.Status;
-import connect4.server.database.User.UserType;
+
+import connect4.client.interfaces.GameListener;
+import connect4.client.interfaces.GameUI;
+import connect4.client.interfaces.GenericUI;
+import connect4.client.views.GameView;
+import connect4.client.views.LoginView;
+import connect4.server.enums.Status;
+import connect4.server.interfaces.IMyServer;
+import connect4.server.objects.User.UserType;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
@@ -20,8 +26,9 @@ public class ClientController
 	
 	private String serverIP;
 	private int serverPort;
-	private IModelListener myListener;
-	private IU userInterface;
+	private GameListener gameListener;
+	private GameUI gameInterface;
+	private GenericUI loginInterface;
 	
 	String username;
 	
@@ -29,11 +36,16 @@ public class ClientController
 	{
 		serverIP = "127.0.0.1";
 		serverPort = 12345;
-		username = "MadJack";
 		
-		makeCustomView();
+		makeLoginView();
 		startClient();
-		System.out.println("Client started");
+		
+//		makeGameView();
+//		gameListener = (GameListener) gameInterface;
+//		gameListener.initializeView(7, 6);
+//		gameInterface.updateUsername("cheval");
+//		gameListener.updateCurrentPlayer("playing");
+//		System.out.println("Client started");
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -42,39 +54,89 @@ public class ClientController
 		this.serverPort = serverPort;
 		this.username = username;
 		
-		makeCustomView();
-		startClient();
+		// TODO
 	}
 	
 	public void makeMove(final int row, final int column)
 	{
-		handleServerResponse(server.makeMove(column, row, username));
+		if(gameInterface != null)
+		{
+			handleServerResponse(server.makeMove(column, row, username), gameInterface);
+		}
 	}
 	
-	public void updateUsername(String username)
+	public void loggedIn(String username)
 	{
 		this.username = username;
+		register(UserType.PLAYER);
 	}
 	
-	/* TODO 
-	 * Must be called if:
-	 * 	Client stops the application
-	 * 	Client kills the process
-	 */
 	public void quitTheGame()
 	{
+		gameInterface.close();
 		System.exit(0);
 	}
 	
-	public String getUsername()
+	public void register(UserType type)
 	{
-		return username;
+		Status response = null;
+		if(type == UserType.PLAYER)
+		{
+			makeGameView();
+			startGameListener();
+			username = server.validateUsername(username);
+		}
+		else if(type == UserType.SPECTATOR)
+		{
+			username = server.validateUsername("Spectator");
+			gameInterface.updateUsername(username);
+		}
+		
+		if(username == null)
+		{
+			System.err.println("The username is null.");
+			return;
+		}
+		
+		response = server.register(username, gameListener, type);
+		
+		if(loginInterface != null)
+		{
+			handleServerResponse(response, loginInterface);
+		}
+		else
+		{
+			handleServerResponse(response, gameInterface);
+		}
 	}
 	
-	private void makeCustomView()
+	private void makeLoginView()
 	{
-		userInterface = new View(this);
-		myListener = (IModelListener) userInterface;
+		loginInterface = new LoginView(this);
+	}
+	
+	private void makeGameView()
+	{
+		if(loginInterface != null)
+		{
+			loginInterface.close();
+			loginInterface = null;
+		}
+		gameInterface = new GameView(this);
+		gameInterface.updateUsername(this.username);
+	}
+	
+	private void startGameListener()
+	{
+		gameListener = (GameListener) gameInterface;
+		try 
+		{
+			callHandler.registerGlobal(GameListener.class, gameListener);
+		}
+		catch (LipeRMIException e) 
+		{
+			System.out.println(e.getMessage());
+		}
 	}
 	
 	private void startClient()
@@ -87,41 +149,23 @@ public class ClientController
 		} 
 		catch (IOException e) 
 		{
-			userInterface.alertMessage("Server is not responding.");
+			loginInterface.alertMessage("Server is not responding.");
 			System.exit(0);
 		}
-		try 
-		{
-			callHandler.registerGlobal(IModelListener.class, myListener);
-		}
-		catch (LipeRMIException e) 
-		{
-			System.out.println(e.getMessage());
-		}
-		register(UserType.PLAYER);
 	}
 	
-	private void register(UserType type)
+	private void handleServerResponse(Status response, GenericUI userInterface)
 	{
-		Status response = null;
-		if(type == UserType.PLAYER)
-		{
-			response = server.registerAsPlayer(username, myListener);
-		}
-		else if(type == UserType.SPECTATOR)
-		{
-			response = server.registerAsSpectator(myListener);
-		}
-		handleServerResponse(response);
-	}
-	
-	private void handleServerResponse(Status serverResponse)
-	{
-		if(serverResponse == Status.OPERATION_DONE)
+		if(response == Status.OPERATION_DONE)
 		{
 			return;
 		}
-		else if(serverResponse == Status.GAME_FULL)
+		else if(response == Status.NAME_NOT_VALIDATED)
+		{
+			this.username = server.validateUsername(this.username);
+			register(UserType.PLAYER);
+		}
+		else if(response == Status.GAME_FULL)
 		{
 			if(userInterface.choiceDialog("Game full",
 					"Would you like to become a spectator?") == 0)
@@ -135,7 +179,7 @@ public class ClientController
 		}
 		else
 		{
-			userInterface.alertMessage(serverResponse.getDescription());
+			userInterface.alertMessage(response.getDescription());
 		}
 	}
 }

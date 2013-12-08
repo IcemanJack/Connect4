@@ -1,4 +1,4 @@
-package connect4.server;
+package connect4.server.enums;
 
 public enum Status
 {
@@ -12,7 +12,9 @@ public enum Status
 	USER_NOT_PLAYING(7, "You are not in the game."),
 	NOT_YOUR_TURN(8, "Isn't your turn. Please wait..."),
 	IN_GAME(9, "Can't become spectator, you're already in game."),
-	YOU_LOOSE(10, "Since you left... You loose.");
+	YOU_LOOSE(10, "Since you left... You loose."),
+	NOT_LOGGED_IN(11, "You are not logged it"),
+	NAME_NOT_VALIDATED(12, "You have to validate the username first.");
 	
 	private final int code;
 	private final String description;

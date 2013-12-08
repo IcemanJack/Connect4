@@ -1,4 +1,4 @@
-package connect4.client;
+package connect4.client.views;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -24,9 +24,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import connect4.server.CaseType;
+import connect4.client.ClientController;
+import connect4.client.interfaces.GameListener;
+import connect4.client.interfaces.GameUI;
+import connect4.server.enums.CaseType;
 
-public class View implements IU, IModelListener
+public class GameView implements GameUI, GameListener
 {
 	private BufferedImage redTokenImage;
 	private BufferedImage blackTokenImage;
@@ -42,7 +45,7 @@ public class View implements IU, IModelListener
 	private int floorColumns;
 	private ClientController controller;
 	
-	public View(ClientController controller)
+	public GameView(ClientController controller)
 	{
 		this.controller = controller;
 		
@@ -58,7 +61,6 @@ public class View implements IU, IModelListener
 	@Override
 	public void initializeView(int floorColumns, int floorRows) 
 	{
-		System.out.println("Initialzing view");
 		this.floorColumns = floorColumns;
 		this.floorRows = floorRows;
 		
@@ -121,7 +123,10 @@ public class View implements IU, IModelListener
 	@Override
 	public void updateCurrentPlayer(String username) 
 	{
-		mainPanel.remove(currentPlayerLabel);
+		if(currentPlayerLabel != null)
+		{
+			mainPanel.remove(currentPlayerLabel);
+		}
 		currentPlayerLabel = new JLabel("Now playing: " + username);
 		mainPanel.add(currentPlayerLabel);
 		mainFrame.pack();
@@ -131,26 +136,14 @@ public class View implements IU, IModelListener
 	@Override
 	public void updateUsername(String username) 
 	{
-		controller.updateUsername(username);
-		try
+		if(usernameLabel != null)
 		{
 			mainPanel.remove(usernameLabel);
-			usernameLabel = new JLabel("My username: " + username);
-			mainPanel.add(usernameLabel);
 		}
-		catch(NullPointerException e)
-		{
-			alertMessage("Can't update username..\n" +
-					"The interface isn't created yet.");
-		}
+		usernameLabel = new JLabel("My username: " + username);
+		mainPanel.add(usernameLabel);
 		mainFrame.pack();
 		mainFrame.repaint();
-	}
-	
-	@Override
-	public void updateListenerNotAvailableUsername(String username)
-	{
-		controller.updateUsername(username);
 	}
 	
 	@Override
@@ -161,7 +154,7 @@ public class View implements IU, IModelListener
 		{
 			message = "It's a null..\nToo strong and furious, like a TIGER.";
 		}
-		if(!winner.equals(controller.getUsername()))
+		if(!winner.equals(usernameLabel.getText()))
 		{
 			alertMessage(message);
 		}
@@ -200,7 +193,7 @@ public class View implements IU, IModelListener
 	  JMenu fileMenu = new JMenu("File"); 
 	  fileMenu.setMnemonic(KeyEvent.VK_F);
 	  
-	  JMenuItem quitSubMenu = new JMenuItem("Exit", KeyEvent.VK_E);
+	  JMenuItem quitSubMenu = new JMenuItem("Quit/Exit", KeyEvent.VK_E);
 	  quitSubMenu.addActionListener(exitSubMenuListener);
 	  
 	  fileMenu.add(quitSubMenu);
@@ -334,4 +327,11 @@ public class View implements IU, IModelListener
 			
 		}
 	};
+
+	
+	@Override
+	public void close()
+	{
+		mainFrame.dispose();
+	}
 }

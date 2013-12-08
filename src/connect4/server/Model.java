@@ -1,5 +1,6 @@
 package connect4.server;
 
+import java.lang.reflect.UndeclaredThrowableException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
@@ -8,13 +9,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import connect4.client.IModelListener;
-import connect4.server.CaseType;
+import connect4.client.interfaces.GameListener;
 import connect4.server.database.Database;
-import connect4.server.database.IDatabase;
 import connect4.server.database.MockDatabase;
-import connect4.server.database.User;
-import connect4.server.database.User.UserType;
+import connect4.server.enums.CaseType;
+import connect4.server.interfaces.IDatabase;
+import connect4.server.interfaces.IModel;
+import connect4.server.objects.User;
+import connect4.server.objects.User.UserType;
 
 /* TODO
  * change all return null
@@ -26,8 +28,7 @@ public class Model implements IModel
 {
 	private IDatabase database;
 	private CaseType[][] board;
-	// Name, User Object
-	// changed to tree temp tests
+	// <User name, User Object>
 	private Map<String, User> users = Collections.synchronizedMap(new TreeMap<String, User>());
 	
 	private AtomicInteger columns = new AtomicInteger();
@@ -83,13 +84,18 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public String addClient(String username, IModelListener client)
+	public String validateUsername(String username)
 	{
 		if(containsUser(username))
 		{
 			username = getNextAvailableUsername(username, username.concat("0"), 0);
 		}
-		
+		return username;
+	}
+	
+	@Override
+	public void addClient(String username, GameListener client)
+	{
 		UserType type =  UserType.SPECTATOR;
 		if(playerAvailable())
 		{
@@ -100,8 +106,7 @@ public class Model implements IModel
 		User user = new User(username, client, type);
 		users.put(username, user);
 		
-		printListOfUsernamesInList("New player added. New u ");
-		return username;
+		printListOfUsernamesInList("New player added. New users ");
 	}
 	
 	@Override
@@ -112,43 +117,23 @@ public class Model implements IModel
 		printListOfUsernamesInList("Player removed. New list ");
 	}
 	
-	
 	@Override
-	public void initializeClientBoard(IModelListener client) 
+	public void initializeClientBoard(GameListener client) 
 	{
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 		Runnable task = new InitializeListenerBoard(client, columns.get(), rows.get());
 		executor.execute(task);
 		executor.shutdown();
-		System.out.println("initializeClientBoard done");
 	}
-	
-	@Override
-	public void updateClientUsername(String name, IModelListener client)
-	{
-		Runnable task;
-		ExecutorService executor = Executors.newFixedThreadPool(1);
-		task = new UpdateListenerUsername(client, name);
-		System.out.println("executing");
-		executor.execute(task);
-		System.out.println("shuting down");
-		executor.shutdown();
-		System.out.println(name + " updated ");
-	}
-	
+		
 	@Override
 	public void updateClientsCurrentPlayer() 
 	{
-		IModelListener[] listeners = getClientsListeners();
-		System.out.println("dfffffffff"+listeners.length);
+		GameListener[] listeners = getClientsListeners();
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
-		for(IModelListener listener: listeners)
+		for(GameListener listener: listeners)
 		{
-			if(listener == null)
-			{
-				System.out.println("cheval");
-			}
 			task = new UpdateListenerCurrentPlayer(listener, currentPlayer);
 			executor.execute(task);
 		}
@@ -159,10 +144,10 @@ public class Model implements IModel
 	public void updateClientsBoardCase(int column, int row, String player)
 	{
 		CaseType caseType = getPlayerCaseType(player);
-		IModelListener[] listeners = getClientsListeners();
+		GameListener[] listeners = getClientsListeners();
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
-		for(IModelListener listener: listeners)
+		for(GameListener listener: listeners)
 		{
 			task = new UpdateListenerBoardCase(listener, column, row, caseType);
 			executor.execute(task);
@@ -178,10 +163,10 @@ public class Model implements IModel
 		{
 			winner = currentPlayer;
 		}
-		IModelListener[] listeners = getClientsListeners();
+		GameListener[] listeners = getClientsListeners();
 		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
 		Runnable task;
-		for(IModelListener listener: listeners)
+		for(GameListener listener: listeners)
 		{
 			task = new UpdateEndOfTheGame(listener, winner);
 			executor.execute(task);
@@ -329,9 +314,9 @@ public class Model implements IModel
 		return checkIfWinningCases(winningCases);
 	}
 	
-	private IModelListener[] getClientsListeners()
+	private GameListener[] getClientsListeners()
 	{
-		IModelListener[] listeners =  new IModelListener[users.size()];
+		GameListener[] listeners =  new GameListener[users.size()];
 		if(users.size() > 0)
 		{
 			int index = 0;
@@ -474,12 +459,12 @@ public class Model implements IModel
 	
 	private class InitializeListenerBoard implements Runnable 
 	{
-		  private IModelListener listener;
+		  private GameListener listener;
 		  private int columns;
 		  private int rows;
 		  
 		  // TODO call super for columns n rows
-		  public InitializeListenerBoard(IModelListener listener, int columns, int rows) 
+		  public InitializeListenerBoard(GameListener listener, int columns, int rows) 
 		  {
 			  this.listener = listener;
 			  this.columns = columns;
@@ -497,42 +482,23 @@ public class Model implements IModel
 			  {
 				e.printStackTrace();
 			  }
-			  listener.initializeView(columns, rows);
-		  }
-	}
-	
-	private class UpdateListenerUsername implements Runnable 
-	{
-		  private IModelListener listener;
-		  private String username;
-		  
-		  UpdateListenerUsername(IModelListener listener, String username) 
-		  {
-			  this.listener = listener;
-			  this.username = username;
-		  }
-
-		  @Override
-		  public void run() 
-		  {
-			  try 
+			  try
 			  {
-				Thread.sleep(250);
-			  } 
-			  catch (InterruptedException e)
-			  {
-				e.printStackTrace();
+				  listener.initializeView(columns, rows);
 			  }
-			  listener.updateUsername(username);
+			  catch (NullPointerException e)
+			  {
+				  System.err.println("Can't initializeView of a null client.");
+			  }
 		  }
 	}
 	
 	private class UpdateListenerCurrentPlayer implements Runnable 
 	{
-		  private IModelListener listener;
+		  private GameListener listener;
 		  private String player;
 		  
-		  UpdateListenerCurrentPlayer(IModelListener listener, String player) 
+		  UpdateListenerCurrentPlayer(GameListener listener, String player) 
 		  {
 			  this.listener = listener;
 			  this.player = player;
@@ -549,18 +515,25 @@ public class Model implements IModel
 			  {
 				e.printStackTrace();
 			  }
-			  listener.updateCurrentPlayer(player);
+			  try
+			  {
+				  listener.updateCurrentPlayer(player);
+			  }
+			  catch (NullPointerException e)
+			  {
+				  System.err.println("Can't updateCurrentPlayer of a null client.");
+			  }
 		  }
 	}
 	
 	private class UpdateListenerBoardCase implements Runnable 
 	{
-		  private IModelListener listener;
+		  private GameListener listener;
 		  private int column;
 		  private int row;
 		  private CaseType caseType;
 		  
-		  public UpdateListenerBoardCase(IModelListener listener, 
+		  public UpdateListenerBoardCase(GameListener listener, 
 				  int columns, int rows, CaseType caseType) 
 		  {
 			  this.listener = listener;
@@ -580,16 +553,23 @@ public class Model implements IModel
 			  {
 				e.printStackTrace();
 			  }
-			  listener.updateCase(column, row, caseType);
+			  try
+			  {
+				  listener.updateCase(column, row, caseType);
+			  }
+			  catch (NullPointerException e)
+			  {
+				  System.err.println("Can't updateCase of a null client.");
+			  }
 		  }
 	}
 	
 	private class UpdateEndOfTheGame implements Runnable 
 	{
-		  private IModelListener listener;
+		  private GameListener listener;
 		  private String winner;
 		  
-		  public UpdateEndOfTheGame(IModelListener listener, String winner) 
+		  public UpdateEndOfTheGame(GameListener listener, String winner) 
 		  {
 			  this.listener = listener;
 			  this.winner = winner;
@@ -610,12 +590,13 @@ public class Model implements IModel
 			  {
 				  listener.updateEndOfTheGame(winner);
 			  }
-			  catch(Exception e)
+			  catch (UndeclaredThrowableException e)
 			  {
-				  /* TODO Arrange
-				   * Cause: this thread is updating after
-				   * the client was remove from the users
-				   */
+				  System.err.println("Can't updateEndOfTheGame of a null client.");
+			  }
+			  catch (NullPointerException e)
+			  {
+				  System.err.println("Can't updateEndOfTheGame of a null client.");
 			  }
 		  }
 	}

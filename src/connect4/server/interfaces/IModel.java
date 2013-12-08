@@ -1,6 +1,6 @@
-package connect4.server;
+package connect4.server.interfaces;
 
-import connect4.client.IModelListener;
+import connect4.client.interfaces.GameListener;
 
 // used by server
 public interface IModel 
@@ -11,11 +11,11 @@ public interface IModel
 	//public void addUserToDataBase();
 	//public void updateUserScoreInDatabase();
 	
-	String addClient(String player, IModelListener client);
+	public String validateUsername(String username);
+	public void addClient(String player, GameListener client);
 	void removeClient(String player);
 	
-	void updateClientUsername(String username, IModelListener client);
-	public void initializeClientBoard(IModelListener client);
+	public void initializeClientBoard(GameListener client);
 	
 	void updateClientsCurrentPlayer();
 	void updateClientsBoardCase(int column, int row, String player);
@@ -35,18 +35,3 @@ public interface IModel
 	boolean positionAvailable(int column, int row);
 	boolean positionMakeWinning(int column, int row);
 }
-
-/* add saveScore this or update.
-try
-{
-	database.addUser(user);
-}
-catch (SQLException e)
-{
-	System.err.println(e.getMessage());
-}
-catch (UserAlreadyExists e) 
-{
-	System.err.println(e.getMessage());
-}
-*/

@@ -1,4 +1,4 @@
-package connect4.server;
+package connect4.server.enums;
 
 public enum CaseType
 {

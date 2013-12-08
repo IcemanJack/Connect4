@@ -11,6 +11,9 @@ import org.postgresql.util.PSQLException;
 import connect4.server.database.MockDatabase.TableDoesNotExist;
 import connect4.server.database.MockDatabase.UserAlreadyExists;
 import connect4.server.database.MockDatabase.UserIsNotFound;
+import connect4.server.enums.Tables;
+import connect4.server.interfaces.IDatabase;
+import connect4.server.objects.User;
 
 
 public class Database implements IDatabase

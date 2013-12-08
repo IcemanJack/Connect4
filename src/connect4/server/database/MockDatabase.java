@@ -5,6 +5,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import connect4.server.enums.Tables;
+import connect4.server.interfaces.IDatabase;
+import connect4.server.objects.User;
+
 public class MockDatabase implements IDatabase
 {
 	private Map<String, User> users = Collections.synchronizedMap(new TreeMap<String, User>());

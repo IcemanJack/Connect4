@@ -8,7 +8,11 @@ import java.util.TreeMap;
 
 import net.sf.lipermi.net.IServerListener;
 
-import connect4.client.IModelListener;
+import connect4.client.interfaces.GameListener;
+import connect4.server.enums.Status;
+import connect4.server.interfaces.IModel;
+import connect4.server.interfaces.IMyServer;
+import connect4.server.objects.User.UserType;
 import net.sf.lipermi.exception.LipeRMIException;
 import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Server;
@@ -49,60 +53,57 @@ public class MyServer extends Server implements IMyServer
 	}
 	
 	@Override
-	public synchronized Status registerAsPlayer(String name, IModelListener client)
-	{		
-		if(!model.playerAvailable())
-		{
-			return Status.GAME_FULL;
-		}
-		// will return incremented one if already in use
-		name = model.addClient(name, client);
-		
+	public String validateUsername(String username)
+	{
+		username = model.validateUsername(username);
 		// to handle unexpected disconnects
 		if(!newClientID.isEmpty())
 		{
-			users.put(newClientID, name);
-			System.out.println(newClientID + " " + name);
+			users.put(newClientID, username);
+			System.out.println("New client: " + newClientID + " " + username);
 		}
-		
-		model.initializeClientBoard(client);
-		model.updateClientUsername(name, client);
-		
-		// last player starts
-		model.setCurrentPlayer(name);
-		model.updateClientsCurrentPlayer();
-		
-		return Status.OPERATION_DONE;
+		return username;
 	}
 	
 	@Override
-	public Status registerAsSpectator(IModelListener client)
-	{
-		String name = model.addClient("Spectator", client);
-		
-		if(!newClientID.isEmpty())
+	public synchronized Status register(String name, GameListener client, UserType userType)
+	{	
+		System.out.println(name);
+		String validatedName = model.validateUsername(name);
+		if(!validatedName.equals(name))
 		{
-			users.put(newClientID, name);
-			System.out.println(newClientID + " " + name);
+			name = validatedName;
+			return Status.NAME_NOT_VALIDATED;
 		}
 		
+		if(userType == UserType.PLAYER)
+		{
+			if(!userLoggedIn(name))
+			{
+				return Status.NOT_LOGGED_IN;
+			}
+			else if(!model.playerAvailable())
+			{
+				return Status.GAME_FULL;
+			}
+			// last player starts
+			model.setCurrentPlayer(name);
+		}
+		
+		model.addClient(name, client);
 		model.initializeClientBoard(client);
-		model.updateClientUsername(name, client);
 		model.updateClientsCurrentPlayer();
 		return Status.OPERATION_DONE;
 	}
 	
-	@Override
-	public synchronized Status unregisterUser(String username) 
+	private synchronized void unregisterUser(String username) 
 	{
 		if(model.isPlaying(username))
 		{
 			model.notifyOfEndOfTheGame(true);
 			model.removeClient(username);
-			return Status.YOU_LOOSE;
 		}
 		model.removeClient(username);
-		return Status.OPERATION_DONE;
 	}
 	
 	@Override
@@ -150,6 +151,7 @@ public class MyServer extends Server implements IMyServer
 		return Status.OPERATION_DONE;
 	}
 
+	
 	private void initializeGame()
 	{
 		if(!startServer())
@@ -180,6 +182,18 @@ public class MyServer extends Server implements IMyServer
 		return false;
 	}
 	
+	private boolean userLoggedIn(String user)
+	{
+		for(String username : users.values())
+		{
+			if(username.equals(user))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private class ServListener implements IServerListener
 	{
 		@Override
@@ -192,8 +206,11 @@ public class MyServer extends Server implements IMyServer
 		public synchronized void clientDisconnected(Socket socket) 
 		{
 			String client = socket.getInetAddress() + ":" + socket.getPort();
-			MyServer.this.unregisterUser(users.get(client));
-			MyServer.this.users.remove(client);
+			if(users.containsKey(client))
+			{
+				MyServer.this.unregisterUser(users.get(client));
+				MyServer.this.users.remove(client);
+			}
 			System.out.println("Client disconnected: " + client);
 		}
 	}
