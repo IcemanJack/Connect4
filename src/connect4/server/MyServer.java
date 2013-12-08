@@ -70,7 +70,6 @@ public class MyServer extends Server implements IMyServer
 	@Override
 	public synchronized Status register(String name, GameListener client, UserType userType)
 	{	
-		System.out.println(name);
 		String validatedName = model.validateUsername(name);
 		if(!validatedName.equals(name))
 		{
@@ -93,8 +92,9 @@ public class MyServer extends Server implements IMyServer
 		}
 		
 		model.addClient(name, client);
-		model.initializeClientBoard(client);
+		model.initializeClientBoard(client, name);
 		model.updateClientsCurrentPlayer();
+		someoneWon = false;
 		return Status.OPERATION_DONE;
 	}
 	
@@ -116,7 +116,7 @@ public class MyServer extends Server implements IMyServer
 		else if(model.floorFull())
 		{
 			model.updatePlayersScoresInDatabase(username, GameResult.NULL);
-			model.notifyOfEndOfTheGame(GameResult.NULL);
+			model.notifyOfEndOfTheGame(GameResult.NULL, username);
 			return Status.ITS_A_NULL;
 		}
 		
@@ -135,7 +135,8 @@ public class MyServer extends Server implements IMyServer
 		if(model.positionMakeWinning(column, mostLowRow))
 		{
 			model.updatePlayersScoresInDatabase(username, GameResult.WIN);
-			model.notifyOfEndOfTheGame(GameResult.WIN);
+			model.notifyOfEndOfTheGame(GameResult.WIN, username);
+			someoneWon = true;
 			return Status.YOU_WON;
 		}
 		
@@ -151,12 +152,19 @@ public class MyServer extends Server implements IMyServer
 		return model.getScoreTableFromDatabase();
 	}
 	
+	private boolean someoneWon;
+	
 	private synchronized void unregisterUser(String username) 
 	{
+		// only for players, not spectators
 		if(model.isPlaying(username))
 		{
 			model.updatePlayersScoresInDatabase(username, GameResult.LOSE);
-			model.notifyOfEndOfTheGame(GameResult.LOSE);
+			// not the last last and there is no winner then he left
+			if((!model.playerAvailable()) && (!someoneWon))
+			{
+				model.notifyOfEndOfTheGame(GameResult.LOSE, username);
+			}
 			model.removeClient(username);
 		}
 		model.removeClient(username);

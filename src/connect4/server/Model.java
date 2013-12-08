@@ -22,12 +22,6 @@ import connect4.server.interfaces.IModel;
 import connect4.server.objects.User;
 import connect4.server.objects.User.UserType;
 
-/* TODO
- * change all return null
- * throw custom exceptions, in server catch them
- * call super to get data from private classes
- */
-
 public class Model implements IModel
 {
 	private IDatabase database;
@@ -191,10 +185,10 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void initializeClientBoard(GameListener client) 
+	public void initializeClientBoard(GameListener client, String name) 
 	{
 		ExecutorService executor = Executors.newFixedThreadPool(1);
-		Runnable task = new InitializeListenerBoard(client, columns.get(), rows.get());
+		Runnable task = new InitializeListenerBoard(client, name);
 		executor.execute(task);
 		executor.shutdown();
 	}
@@ -229,29 +223,31 @@ public class Model implements IModel
 	}
 	
 	@Override
-	public void notifyOfEndOfTheGame(GameResult result)
+	public void notifyOfEndOfTheGame(GameResult result, String player)
 	{
-		String winner = "";
+		String message = "";
 		if(result == GameResult.WIN)
 		{
-			winner = this.currentPlayer;
+			message = player + " won.";
 		}
-		if(result == GameResult.LOSE)
+		else if(result == GameResult.LOSE)
 		{
-			winner = this.getOpponent(this.currentPlayer);
-		}
-		else
+			message = player + " lost.";
+		} 
+		else if(result == GameResult.NULL)
 		{
-			winner = "No one";
+			message = "It's a null..\nToo strong and furious, like a TIGER.";
 		}
 		
-		GameListener[] listeners = getClientsListeners();
-		ExecutorService executor = Executors.newFixedThreadPool(listeners.length);
+		ExecutorService executor = Executors.newFixedThreadPool(users.values().size());
 		Runnable task;
-		for(GameListener listener: listeners)
+		for(User user: users.values())
 		{
-			task = new UpdateEndOfTheGame(listener, winner);
-			executor.execute(task);
+			if(!user.getName().equals(player))
+			{
+				task = new UpdateEndOfTheGame(user.getListener(), message);
+				executor.execute(task);
+			}
 		}
 		executor.shutdown();
 	}
@@ -587,15 +583,15 @@ public class Model implements IModel
 	private class InitializeListenerBoard implements Runnable 
 	{
 		  private GameListener listener;
-		  private int columns;
-		  private int rows;
+		  private String name;
+		  private String current;
 		  
 		  // TODO call super for columns n rows
-		  public InitializeListenerBoard(GameListener listener, int columns, int rows) 
+		  public InitializeListenerBoard(GameListener listener, String name) 
 		  {
 			  this.listener = listener;
-			  this.columns = columns;
-			  this.rows = rows;
+			  this.name = name;
+			  this.current = Model.this.currentPlayer;
 		  }
 
 		  @Override
@@ -611,7 +607,8 @@ public class Model implements IModel
 			  }
 			  try
 			  {
-				  listener.initializeView(columns, rows);
+				  listener.initializeView(Model.this.columns, Model.this.rows,
+						  this.name, this.current);
 			  }
 			  catch (NullPointerException e)
 			  {
@@ -694,12 +691,12 @@ public class Model implements IModel
 	private class UpdateEndOfTheGame implements Runnable 
 	{
 		  private GameListener listener;
-		  private String winner;
+		  private String message;
 		  
-		  public UpdateEndOfTheGame(GameListener listener, String winner) 
+		  public UpdateEndOfTheGame(GameListener listener, String message) 
 		  {
 			  this.listener = listener;
-			  this.winner = winner;
+			  this.message = message;
 		  }
 
 		  @Override
@@ -715,7 +712,7 @@ public class Model implements IModel
 			  }
 			  try
 			  {
-				  listener.updateEndOfTheGame(winner);
+				  listener.updateEndOfTheGame(message);
 			  }
 			  catch (UndeclaredThrowableException e)
 			  {

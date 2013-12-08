@@ -13,6 +13,7 @@ import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -26,10 +27,10 @@ import javax.swing.JPanel;
 
 import connect4.client.ClientController;
 import connect4.client.interfaces.GameListener;
-import connect4.client.interfaces.GameUI;
+import connect4.client.interfaces.GenericUI;
 import connect4.server.enums.CaseType;
 
-public class GameView implements GameUI, GameListener
+public class GameView implements GameListener, GenericUI
 {
 	private BufferedImage redTokenImage;
 	private BufferedImage blackTokenImage;
@@ -41,8 +42,8 @@ public class GameView implements GameUI, GameListener
 	private JLabel currentPlayerLabel;
 	private JPanel playgroundPanel;
 	
-	private int floorRows;
-	private int floorColumns;
+	private int rows;
+	private int columns;
 	private ClientController controller;
 	
 	public GameView(ClientController controller)
@@ -59,15 +60,15 @@ public class GameView implements GameUI, GameListener
 	}
 	
 	@Override
-	public void initializeView(int floorColumns, int floorRows) 
+	public void initializeView(AtomicInteger columns, AtomicInteger rows, String username, String current)
 	{
-		this.floorColumns = floorColumns;
-		this.floorRows = floorRows;
+		this.columns = columns.get();
+		this.rows = rows.get();
 		
 		makeMenuBar();
 		
-		currentPlayerLabel = new JLabel();
-		usernameLabel = new JLabel();
+		currentPlayerLabel = new JLabel("Now playing: " + current);
+		usernameLabel = new JLabel("Username: " + username);
 		mainPanel.add(usernameLabel);
 		mainPanel.add(currentPlayerLabel);
 		
@@ -90,11 +91,11 @@ public class GameView implements GameUI, GameListener
 		playgroundPanel = new JPanel(
 				new GridLayout
 				(
-						floorRows, floorColumns
+						rows, columns
 				));
 		playgroundPanel.setName("PlaygroundPanel");
 		// POPULATE
-		int totalTokens = floorColumns * floorRows;
+		int totalTokens = columns * rows;
 		for(int i = 0; i < totalTokens; i++)
 		{
 			JLabel tokenImageLabel = new JLabel(new ImageIcon(emptyTokenImage));
@@ -109,7 +110,7 @@ public class GameView implements GameUI, GameListener
 	@Override
 	public void updateCase(int column, int row, CaseType caseType)
 	{
-		int index = (row * floorColumns) + column;
+		int index = (row * columns) + column;
 		playgroundPanel.remove(index);
 
 		JLabel tokenImageLabel = new JLabel(new ImageIcon(getCaseImage(caseType)));
@@ -134,30 +135,9 @@ public class GameView implements GameUI, GameListener
 	}
 	
 	@Override
-	public void updateUsername(String username) 
+	public void updateEndOfTheGame(String message)
 	{
-		if(usernameLabel != null)
-		{
-			mainPanel.remove(usernameLabel);
-		}
-		usernameLabel = new JLabel("My username: " + username);
-		mainPanel.add(usernameLabel);
-		mainFrame.pack();
-		mainFrame.repaint();
-	}
-	
-	@Override
-	public void updateEndOfTheGame(String winner)
-	{
-		String message = winner + " won the game!";
-		if(winner.isEmpty())
-		{
-			message = "It's a null..\nToo strong and furious, like a TIGER.";
-		}
-		if(!winner.equals(usernameLabel.getText()))
-		{
-			alertMessage(message);
-		}
+		alertMessage(message);
 		controller.quitTheGame();
 	}
 

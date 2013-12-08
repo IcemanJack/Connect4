@@ -16,11 +16,11 @@ public interface IModel
 	public void addClient(String player, GameListener client);
 	void removeClient(String player);
 	
-	public void initializeClientBoard(GameListener client);
+	public void initializeClientBoard(GameListener client, String name);
 	
 	void updateClientsCurrentPlayer();
 	void updateClientsBoardCase(int column, int row, String player);
-	void notifyOfEndOfTheGame(GameResult result);
+	void notifyOfEndOfTheGame(GameResult result, String player);
 	
 	boolean makeMove(int column, int row, String player);
 	

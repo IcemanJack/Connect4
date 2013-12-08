@@ -3,7 +3,6 @@ package connect4.client;
 import java.io.IOException;
 
 import connect4.client.interfaces.GameListener;
-import connect4.client.interfaces.GameUI;
 import connect4.client.interfaces.GenericUI;
 import connect4.client.views.GameView;
 import connect4.client.views.LoginView;
@@ -15,7 +14,6 @@ import net.sf.lipermi.handler.CallHandler;
 import net.sf.lipermi.net.Client;
 
 import connect4.client.views.ScoresView;
-import connect4.server.objects.User;
 
 public class ClientController
 {
@@ -28,7 +26,7 @@ public class ClientController
 	String username;
 
 	private GameListener gameListener;
-	private GameUI gameInterface;
+	private GenericUI gameInterface;
 	private GenericUI loginInterface;
 	
 	public ClientController()
@@ -40,25 +38,12 @@ public class ClientController
 		startClient();
 		
 		// TESTS
+		
 //		makeGameView();
 //		gameListener = (GameListener) gameInterface;
 //		gameListener.initializeView(7, 6);
 //		gameInterface.updateUsername("cheval");
 //		gameListener.updateCurrentPlayer("playing");
-//		System.out.println("Client started");
-		
-//		User[] users = new User[3];
-//		User u1 = new User("Blah");
-//		u1.setScore(1000);
-//		users[0] = u1;
-//		User u2 = new User("cheval");
-//		u2.setScore(200);
-//		users[1] = u2;
-//		User u3 = new User("raw");
-//		u3.setScore(200);
-//		users[2] = u3;
-//		
-//		new ScoresView(users);
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)
@@ -103,7 +88,6 @@ public class ClientController
 		else if(type == UserType.SPECTATOR)
 		{
 			username = server.validateUsername("Spectator");
-			gameInterface.updateUsername(username);
 		}
 		
 		if(username == null)
@@ -142,7 +126,6 @@ public class ClientController
 			loginInterface = null;
 		}
 		gameInterface = new GameView(this);
-		gameInterface.updateUsername(this.username);
 	}
 	
 	private void startGameListener()

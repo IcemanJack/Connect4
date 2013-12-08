@@ -152,6 +152,15 @@ public class Database implements IDatabase
         {
             e.printStackTrace();
         }
+        // TODO remove
+		User[] users = null;
+		try {users = getScoreTable();}
+		catch (SQLException e){System.err.println(e.getMessage());}
+		
+		for(User user2: users)
+		{
+			System.out.println(user2.getName() + " " + user2.getScore());
+		}
 	}
 
 	@Override
@@ -230,7 +239,6 @@ public class Database implements IDatabase
 			{
 				user = new User(result.getString("name"));
 				user.setScore(result.getInt("score"));
-				System.out.println(result.getString("name"));
 				try
 				{
 					users[result.getRow() - 1] = user;
