@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="Ivanov_Bonnelly_Vezina_TP2/server.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/Ivanov_Bonnelly_Vezina_TP2/server.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="false" mainClassHandleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server{Main.java[Main" manifestLocation="/Ivanov_Bonnelly_Vezina_TP2/server.man" manifestVersion="1.0" reuseManifest="true" saveManifest="true" usesManifest="true">
+        <sealing sealJar="true">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server.interfaces"/>
+        <folder path="/Ivanov_Bonnelly_Vezina_TP2/libs"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;img"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server.enums"/>
+        <file path="/Ivanov_Bonnelly_Vezina_TP2/README.md"/>
+        <folder path="/Ivanov_Bonnelly_Vezina_TP2/doc"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.client"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.client.views"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server.objects"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server.ai"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.server.database"/>
+        <javaElement handleIdentifier="=Ivanov_Bonnelly_Vezina_TP2/src&lt;connect4.client.interfaces"/>
+    </selectedElements>
+</jardesc>

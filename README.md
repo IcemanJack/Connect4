@@ -1,3 +1,23 @@
+Connect4
+========
+Basics
+------
+This is a distributed Connect4 game.
+For a more accurate description of the game, please visit http://en.wikipedia.org/wiki/Connect_Four
+It's build under the MVC design pattern.
+The server contains the game database and defines the rules.
+The clients connects to the server in order to play or watch a game.
+
+Game constraints
+----------------
+1. 1vs1 game against a player or the computer.
+2. All other players will be asked to become observers of the game or to leave.
+3. If there is no other player you will be asked to wait.
+4. If you are playing a game and you Quit/Exit the game, you lose.
+5. The server can only handle 1 game at a time.
+6. You have to stop the server yourself, so you can consult critical output if needed.
+7. You have to restart the server to start a new game.
+
 Important
 =========
 Ubuntu 12.04 LTS
@@ -28,4 +48,7 @@ Handle all possible client disconnects in server.
 2. On registerPlayer or registerSpectator, get newClientID that was renewed by his socket and put in users in String formats <"newClientId", "clientName">.
 3. On socket disconnect get client by clientID from users and call unregister method in server with the client name.
 
+Author: Vsevolod Ivanov
+Game repository: https://github.com/IcemanJack/Ivanov_Bonnelly_Vezina_TP2
+*Could change for: https://github.com/IcemanJack/Connect4
 

@@ -62,6 +62,7 @@ public class ComputerTests
 		//game1.quitTheGame();
 	}
 	
+	@SuppressWarnings("unused")
 	private static void threadSleep(int milliseconds)
 	{
 		try

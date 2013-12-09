@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: connect4/server/Main
+Class-Path: ./libs/lipeRMI/LipeRMI.jar ./libs/postgresql/postgresql-9.3-1100.jdbc4.jar
+

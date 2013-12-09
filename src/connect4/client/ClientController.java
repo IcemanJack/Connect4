@@ -36,14 +36,6 @@ public class ClientController
 		
 		makeLoginView();
 		startClient();
-		
-		// TESTS
-		
-//		makeGameView();
-//		gameListener = (GameListener) gameInterface;
-//		gameListener.initializeView(7, 6);
-//		gameInterface.updateUsername("cheval");
-//		gameListener.updateCurrentPlayer("playing");
 	}
 	
 	public ClientController(String serverIP, int serverPort, String username)

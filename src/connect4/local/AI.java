@@ -6,6 +6,7 @@ public class AI
 	private CaseType otherPlayer = CaseType.PLAYER1;
 	private int searchLimit;
 	private int maxColumn;
+	@SuppressWarnings("unused")
 	private BoardAnalysis boardAnalysis;
 	
 	public AI(int limit, CaseType[][] gameBoard) 
