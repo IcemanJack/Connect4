@@ -56,8 +56,8 @@ public class Database implements IDatabase
 		try {System.out.println(db.getTableDescription(Tables.usr));} 
 		catch (TableDoesNotExist e1){ e1.printStackTrace();}
 		
-		User u1 = new User("Peter");
-		u1.setScore(1000);
+		User u1 = new User("Cheval");
+		u1.setScore(666);
 		
 		try{db.addUser(u1);}
 		catch (SQLException e){System.err.println(e.getMessage());}
@@ -106,6 +106,7 @@ public class Database implements IDatabase
 	@Override
 	public void closeConnection() throws SQLException 
 	{
+			Database.connection.commit();
 			Database.connection.close();
 	}
 	
@@ -152,15 +153,6 @@ public class Database implements IDatabase
         {
             e.printStackTrace();
         }
-        // TODO remove
-		User[] users = null;
-		try {users = getScoreTable();}
-		catch (SQLException e){System.err.println(e.getMessage());}
-		
-		for(User user2: users)
-		{
-			System.out.println(user2.getName() + " " + user2.getScore());
-		}
 	}
 
 	@Override
