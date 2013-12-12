@@ -48,7 +48,6 @@ Handle all possible client disconnects in server.
 2. On registerPlayer or registerSpectator, get newClientID that was renewed by his socket and put in users in String formats <"newClientId", "clientName">.
 3. On socket disconnect get client by clientID from users and call unregister method in server with the client name.
 
-Author: Vsevolod Ivanov
-Game repository: https://github.com/IcemanJack/Ivanov_Bonnelly_Vezina_TP2
-*Could change for: https://github.com/IcemanJack/Connect4
+Author: Seva Ivanov
+https://github.com/IcemanJack/Connect4
 
