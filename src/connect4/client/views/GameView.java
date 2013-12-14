@@ -162,6 +162,8 @@ public class GameView implements GameListener, GenericUI
 				return redTokenImage;
 			case PLAYER2:
 				return blackTokenImage;
+			default:
+				break;
 		}
 		return emptyTokenImage;
 	}

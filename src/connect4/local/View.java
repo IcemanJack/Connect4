@@ -128,6 +128,8 @@ public class View implements ModelUpdateListenerI
 				return redTokenImage;
 			case PLAYER2:
 				return blackTokenImage;
+			default:
+				break;
 		}
 		return emptyTokenImage;
 	}

@@ -2,11 +2,11 @@ Connect4
 ========
 Basics
 ------
-This is a distributed Connect4 game.
-For a more accurate description of the game, please visit http://en.wikipedia.org/wiki/Connect_Four
-It's build under the MVC design pattern.
-The server contains the game database and defines the rules.
-The clients connects to the server in order to play or watch a game.
+* This is a distributed Connect4 game.
+* For a more accurate description of the game, please visit http://en.wikipedia.org/wiki/Connect_Four
+* It's build under the MVC design pattern.
+* The server contains the game database and defines the rules.
+* The clients connects to the server in order to play or watch a game.
 
 Game constraints
 ----------------
@@ -22,7 +22,23 @@ Important
 =========
 Ubuntu 12.04 LTS
 ----------------
-LipeRMI won't work on Java 7 downgrade to Java 6
+<table>
+  <tr>
+    <th>Java</th><th>Works</th>
+  </tr>
+  <tr>
+    <td>6-openjdk</td><td>Yes</td>
+  </tr>
+  <tr>
+    <td>6-openjdk-amd64</td><td>No</td>
+  </tr>
+  <tr>
+    <td>7-openjdk-amd64</td><td>No</td>
+  </tr>
+  <tr>
+    <td>7-oracle</td><td>Yes</td>
+  </tr>
+</table>
 
 In order to make the database work
 ----------------------------------
