@@ -1,4 +1,4 @@
-# Connect4
+# Distributed Connect4
 
 *http://en.wikipedia.org/wiki/Connect_Four*
 
