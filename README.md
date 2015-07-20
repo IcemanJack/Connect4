@@ -4,6 +4,8 @@
 
 This is a distributed LipeRMI Connect4 game. It is built under the MVC design pattern. The server contains the game database and defines the rules. The clients connect to the server in order to play or watch an ongoing game.
 
+![Preview](https://raw.githubusercontent.com/sevaivanov/connect4/master/src/img/preview.png)
+
 ## Game Constraints
 
 * This is a 1vs1 game against a player or the computer.
