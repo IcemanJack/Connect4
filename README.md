@@ -23,26 +23,6 @@ This is a distributed LipeRMI Connect4 game. It is built under the MVC design pa
 * Change database setup
 * Implement computer AI to play against
 
-## Supported Java Versions
-
-<table>
-  <tr>
-    <th>Java</th><th>Status</th>
-  </tr>
-  <tr>
-    <td>6-openjdk</td><td>✓</td>
-  </tr>
-  <tr>
-    <td>6-openjdk-amd64</td><td>x</td>
-  </tr>
-  <tr>
-    <td>7-openjdk-amd64</td><td>x</td>
-  </tr>
-  <tr>
-    <td>7-oracle</td><td>✓</td>
-  </tr>
-</table>
-
 ## Database Setup
 
 1. Set *postgres* default user password to *mypassword*.
